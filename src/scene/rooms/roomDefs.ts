@@ -199,6 +199,7 @@ export const lobby: RoomDef = makeRoom({
   floorColor: "#6e5c45",
   ceilingColor: "#e2dccf",
   spawn: [0, 6],
+  spawnYaw: 0, // face north into the atrium
   doors: [
     { side: "north", offset: -8 },
     { side: "north", offset: 8 },
@@ -220,7 +221,7 @@ export const renaissanceRoom: RoomDef = makeRoom({
   wallColor: "#7d2e2a", // deep venetian red
   floorColor: "#564434",
   spawn: [-8, -12],
-  spawnYaw: Math.PI,
+  spawnYaw: 0, // entering from the south door, face into the room
   doors: [{ side: "south", offset: 6 }],
   obstacles: [bench(-14, -18)],
 });
@@ -235,7 +236,7 @@ export const baroqueRoom: RoomDef = makeRoom({
   wallColor: "#3a4434", // dark gallery green
   floorColor: "#4e3e30",
   spawn: [8, -12],
-  spawnYaw: Math.PI,
+  spawnYaw: 0, // entering from the south door, face into the room
   doors: [{ side: "south", offset: -6 }],
   obstacles: [bench(14, -18)],
 });
@@ -250,7 +251,7 @@ export const romanticismRoom: RoomDef = makeRoom({
   wallColor: "#39465c", // stormy blue
   floorColor: "#56473a",
   spawn: [-8, 12],
-  spawnYaw: 0,
+  spawnYaw: Math.PI, // entering from the north door, face into the room
   doors: [{ side: "north", offset: 6 }],
   obstacles: [bench(-14, 18)],
 });
@@ -265,7 +266,7 @@ export const impressionismRoom: RoomDef = makeRoom({
   wallColor: "#9aa78c", // soft sage
   floorColor: "#5c4a38",
   spawn: [8, 12],
-  spawnYaw: 0,
+  spawnYaw: Math.PI, // entering from the north door, face into the room
   doors: [{ side: "north", offset: -6 }],
   obstacles: [bench(14, 18)],
 });
