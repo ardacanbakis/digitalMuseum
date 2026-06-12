@@ -97,8 +97,9 @@ export function Painting({
         onClick={(e) => {
           e.stopPropagation();
           // Touch / unlocked-pointer path; crosshair clicks are handled
-          // by InteractionManager while the pointer is locked.
-          if (document.pointerLockElement) return;
+          // by InteractionManager while the pointer is locked. Ignore
+          // drag-pan releases (large pointer travel).
+          if (document.pointerLockElement || e.delta > 5) return;
           const { viewMode, selectedArtwork, setSelectedArtwork } =
             useStore.getState();
           if (viewMode === "walking") selectArtwork(id);

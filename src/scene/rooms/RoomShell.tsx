@@ -24,11 +24,13 @@ export function RoomShell({ room }: { room: RoomDef }) {
 
   return (
     <group
-      onClick={() => {
+      onClick={(e) => {
         // Clicking anywhere on the room (not a painting) while inspecting
         // puts the painting back; paintings stopPropagation so this never
-        // fires for clicks on them.
+        // fires for clicks on them. Drag-pans (large pointer travel)
+        // don't count as clicks.
         if (
+          e.delta <= 5 &&
           !document.pointerLockElement &&
           useStore.getState().viewMode === "inspecting"
         ) {

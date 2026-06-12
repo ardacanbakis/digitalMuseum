@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
+import { closeInspect } from "../scene/artworks/interaction";
 import { usePointerLock } from "../scene/player/usePointerLock";
 import { isTouchDevice } from "../scene/player/input";
 import styles from "./Hud.module.css";
@@ -12,6 +13,7 @@ const KEYBINDINGS: [keys: string, action: string][] = [
   ["Click", "Inspect artwork"],
   ["← → / Q E", "Browse paintings while inspecting"],
   ["Scroll wheel", "Zoom while inspecting"],
+  ["Click + drag", "Pan across the painting when zoomed"],
   ["ESC / click away", "Put the painting back"],
   ["ESC (walking)", "Open & close this menu"],
 ];
@@ -25,15 +27,23 @@ export function Hud() {
   const touch = isTouchDevice();
   const [showAbout, setShowAbout] = useState(false);
 
-  // ESC re-enters the museum from the menu, mirroring the Enter button
+  // All ESC behavior lives in this one handler so modes never fight:
+  // inspecting → put the painting back; walking (unlocked) → menu;
+  // menu → re-enter. While pointer-locked, the browser itself turns ESC
+  // into an unlock, which lands in walking→menu via pointerlockchange.
   useEffect(() => {
-    if (viewMode !== "menu" || touch) return;
+    if (touch) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !document.pointerLockElement) enter();
+      if (e.key !== "Escape") return;
+      const state = useStore.getState();
+      if (state.viewMode === "inspecting") closeInspect();
+      else if (document.pointerLockElement) return;
+      else if (state.viewMode === "menu") enter();
+      else state.setViewMode("menu");
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [viewMode, touch, enter]);
+  }, [touch, enter]);
 
   if (viewMode === "menu") {
     return (

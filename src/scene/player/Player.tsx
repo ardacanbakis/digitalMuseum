@@ -1,6 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Euler, Matrix4, Quaternion, Vector3 } from "three";
+import {
+  Euler,
+  MathUtils,
+  Matrix4,
+  PerspectiveCamera,
+  Quaternion,
+  Vector3,
+} from "three";
 import { useStore } from "../../store";
 import {
   computeFocusPose,
@@ -19,15 +26,22 @@ const MAX_DELTA = 0.05; // clamp dt so tab-switches can't tunnel through walls
 const FOCUS_DAMPING = 4; // camera glide speed toward a focused artwork
 
 const UP = new Vector3(0, 1, 0);
-const ZOOM_MIN = 0.6;
-const ZOOM_MAX = 1.8;
+const ZOOM_MIN = 0.35;
+const ZOOM_MAX = 1.6;
 const ZOOM_STEP = 1.12;
+const PAN_LIMIT = 0.45; // pan stays within this fraction of the canvas size
 const ZOOM_SCRATCH = new Vector3();
 
 interface FocusTarget {
   id: string;
-  position: Vector3;
-  lookTarget: Vector3;
+  /** Default camera stand-back position (zoom = 1). */
+  basePosition: Vector3;
+  /** Center of the popped-out painting — zoom moves toward it. */
+  paintingPosition: Vector3;
+  /** Camera-right along the wall, for panning across the canvas. */
+  right: Vector3;
+  width: number;
+  height: number;
   quaternion: Quaternion;
 }
 
@@ -61,6 +75,10 @@ export function Player({ room }: { room: RoomDef }) {
   const focusRef = useRef<FocusTarget | null>(null);
   const wasInspecting = useRef(false);
   const zoomRef = useRef(1);
+  const panRef = useRef({ x: 0, y: 0 });
+  const dragRef = useRef<{ pointerId: number; x: number; y: number } | null>(
+    null,
+  );
   const gl = useThree((s) => s.gl);
 
   // Mouse-wheel zoom while inspecting (canvas only, so the info panel
@@ -79,6 +97,58 @@ export function Player({ room }: { room: RoomDef }) {
     return () => el.removeEventListener("wheel", onWheel);
   }, [gl]);
 
+  // Click-and-drag to pan across the painting while inspecting, clamped
+  // to the canvas edges. Drag speed tracks the current zoom level.
+  useEffect(() => {
+    const el = gl.domElement;
+    const onPointerDown = (e: PointerEvent) => {
+      if (useStore.getState().viewMode !== "inspecting") return;
+      if (dragRef.current) return;
+      dragRef.current = { pointerId: e.pointerId, x: e.clientX, y: e.clientY };
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      const drag = dragRef.current;
+      const focus = focusRef.current;
+      if (!drag || e.pointerId !== drag.pointerId || !focus) return;
+      if (useStore.getState().viewMode !== "inspecting") {
+        dragRef.current = null;
+        return;
+      }
+      const fov = (camera as PerspectiveCamera).fov ?? 70;
+      const distance = camera.position.distanceTo(focus.paintingPosition);
+      const metersPerPixel =
+        (2 * distance * Math.tan(MathUtils.degToRad(fov) / 2)) /
+        el.clientHeight;
+      // "Grab the canvas" feel: dragging right shows what's to the left
+      const pan = panRef.current;
+      pan.x = MathUtils.clamp(
+        pan.x - (e.clientX - drag.x) * metersPerPixel,
+        -focus.width * PAN_LIMIT,
+        focus.width * PAN_LIMIT,
+      );
+      pan.y = MathUtils.clamp(
+        pan.y + (e.clientY - drag.y) * metersPerPixel,
+        -focus.height * PAN_LIMIT,
+        focus.height * PAN_LIMIT,
+      );
+      drag.x = e.clientX;
+      drag.y = e.clientY;
+    };
+    const onPointerEnd = (e: PointerEvent) => {
+      if (dragRef.current?.pointerId === e.pointerId) dragRef.current = null;
+    };
+    el.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerEnd);
+    window.addEventListener("pointercancel", onPointerEnd);
+    return () => {
+      el.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerEnd);
+      window.removeEventListener("pointercancel", onPointerEnd);
+    };
+  }, [gl, camera]);
+
   useFrame((_, delta) => {
     const store = useStore.getState();
     const dt = Math.min(delta, MAX_DELTA);
@@ -91,30 +161,38 @@ export function Player({ room }: { room: RoomDef }) {
           const art = store.artworkData[store.selectedArtwork]?.data;
           const [w, h] = paintingSize(art, null, placement.maxWidth);
           const pose = computeFocusPose(placement, w, h);
-          const position = new Vector3(...pose.cameraPosition);
+          const basePosition = new Vector3(...pose.cameraPosition);
           const quaternion = new Quaternion().setFromRotationMatrix(
             new Matrix4().lookAt(
-              position,
+              basePosition,
               new Vector3(...pose.lookTarget),
               UP,
             ),
           );
           focusRef.current = {
             id: store.selectedArtwork,
-            position,
-            lookTarget: new Vector3(...pose.lookTarget),
+            basePosition,
+            paintingPosition: new Vector3(...pose.paintingPosition),
+            right: new Vector3(placement.normal[1], 0, -placement.normal[0]),
+            width: w,
+            height: h,
             quaternion,
           };
           zoomRef.current = 1;
+          panRef.current = { x: 0, y: 0 };
         }
       }
       const focus = focusRef.current;
       if (focus) {
-        // Zoom scales the camera's distance from the painting
-        const target = ZOOM_SCRATCH.copy(focus.position)
-          .sub(focus.lookTarget)
+        // Zoom moves the camera straight toward the painting's center
+        // (it self-centers as you zoom in); pan slides parallel to the
+        // canvas so you can study different parts of it.
+        const target = ZOOM_SCRATCH.copy(focus.basePosition)
+          .sub(focus.paintingPosition)
           .multiplyScalar(zoomRef.current)
-          .add(focus.lookTarget);
+          .add(focus.paintingPosition)
+          .addScaledVector(focus.right, panRef.current.x);
+        target.y += panRef.current.y;
         const k = 1 - Math.exp(-FOCUS_DAMPING * dt);
         camera.position.lerp(target, k);
         camera.quaternion.slerp(focus.quaternion, k);
@@ -124,6 +202,7 @@ export function Player({ room }: { room: RoomDef }) {
     }
 
     focusRef.current = null;
+    dragRef.current = null;
     if (wasInspecting.current) {
       // Resume walking from wherever the glide left the camera
       wasInspecting.current = false;

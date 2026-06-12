@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { commonsFilePageUrl } from "../api/commons";
 import { closeInspect } from "../scene/artworks/interaction";
 import { useStore } from "../store";
@@ -9,15 +8,6 @@ export function InfoPanel() {
   const record = useStore((s) =>
     s.selectedArtwork ? s.artworkData[s.selectedArtwork] : undefined,
   );
-
-  useEffect(() => {
-    if (!selectedId) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeInspect();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedId]);
 
   if (!selectedId) return null;
   const art = record?.data;
@@ -83,8 +73,8 @@ export function InfoPanel() {
           </span>
         </footer>
         <p className={styles.hint}>
-          ← → browse the room · scroll to zoom · ESC or click away to return
-          it to the wall
+          ← → browse the room · scroll to zoom · drag to pan · ESC or click
+          away to return it to the wall
         </p>
       </div>
     </aside>

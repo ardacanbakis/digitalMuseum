@@ -51,9 +51,9 @@ export function usePointerLock() {
       }
     };
     const onError = () => {
+      // A refused lock (cooldown, no user gesture) is recoverable: the
+      // click-to-relock handler below picks it up. Never bounce to menu.
       resetInput();
-      if (useStore.getState().viewMode === "menu") return;
-      if (useStore.getState().viewMode === "walking") setViewMode("menu");
     };
     const onClick = (e: MouseEvent) => {
       if (
