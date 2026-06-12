@@ -35,8 +35,11 @@ export interface FetchedArtwork {
   movement?: string;
   extract?: string;
   wikipediaUrl?: string;
-  /** Commons filename from Wikidata P18; image URLs derive from this. */
+  /** Commons filename from Wikidata P18; attribution links derive from this. */
   imageFilename?: string;
+  /** Direct upload.wikimedia.org URLs (CORS-enabled, safe for textures). */
+  imageUrlSmall?: string;
+  imageUrlLarge?: string;
   /** Fallback image when P18 is missing: the Wikipedia page thumbnail. */
   thumbnailUrl?: string;
 }

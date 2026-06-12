@@ -2,6 +2,7 @@ import { manifest } from "../data/manifest";
 import type { ArtworkEntry, FetchedArtwork, RoomId } from "../data/types";
 import { useStore } from "../store";
 import type { ArtworkRecord } from "../store/artworkSlice";
+import { fetchCommonsImageUrls, type CommonsImageUrls } from "./commons";
 import { mapWithConcurrency } from "./http";
 import { fetchWikipediaSummary, type WikipediaSummary } from "./wikipedia";
 import {
@@ -17,6 +18,7 @@ function assemble(
   summary: WikipediaSummary | undefined,
   facts: WikidataFacts | undefined,
   labels: Record<string, string>,
+  imageUrls: CommonsImageUrls | undefined,
 ): FetchedArtwork {
   const label = (id: string) => labels[id];
   const joinLabels = (ids: string[]) =>
@@ -41,6 +43,8 @@ function assemble(
     extract: summary?.extract,
     wikipediaUrl: summary?.pageUrl,
     imageFilename: facts?.imageFilename,
+    imageUrlSmall: imageUrls?.small ?? summary?.thumbnailUrl,
+    imageUrlLarge: imageUrls?.large ?? summary?.thumbnailUrl,
     thumbnailUrl: summary?.thumbnailUrl,
   };
 }
@@ -78,6 +82,13 @@ export async function loadRoomArtworks(room: RoomId): Promise<void> {
   );
   const facts = await factsPromise;
 
+  const filenames = todo
+    .map((e) => facts[e.wikidataId]?.imageFilename)
+    .filter((f): f is string => Boolean(f));
+  const imageUrlsPromise = fetchCommonsImageUrls(filenames).catch(
+    () => ({}) as Record<string, CommonsImageUrls>,
+  );
+
   const linkedIds = todo.flatMap((e) => {
     const f = facts[e.wikidataId];
     if (!f) return [];
@@ -95,6 +106,7 @@ export async function loadRoomArtworks(room: RoomId): Promise<void> {
           () => ({}) as Record<string, string>,
         )
       : {};
+  const imageUrlMap = await imageUrlsPromise;
 
   const records: Record<string, ArtworkRecord> = {};
   todo.forEach((entry, i) => {
@@ -110,7 +122,15 @@ export async function loadRoomArtworks(room: RoomId): Promise<void> {
     } else {
       records[entry.wikidataId] = {
         status: "loaded",
-        data: assemble(entry, summary, entityFacts, labels),
+        data: assemble(
+          entry,
+          summary,
+          entityFacts,
+          labels,
+          entityFacts?.imageFilename
+            ? imageUrlMap[entityFacts.imageFilename]
+            : undefined,
+        ),
       };
     }
   });

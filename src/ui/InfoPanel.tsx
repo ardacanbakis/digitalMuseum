@@ -1,9 +1,5 @@
 import { useEffect } from "react";
-import {
-  commonsFilePageUrl,
-  commonsImageUrl,
-  FOCUS_IMAGE_WIDTH,
-} from "../api/commons";
+import { commonsFilePageUrl } from "../api/commons";
 import { isTouchDevice } from "../scene/player/input";
 import { usePointerLock } from "../scene/player/usePointerLock";
 import { useStore } from "../store";
@@ -38,9 +34,6 @@ export function InfoPanel() {
 
   if (!selectedId) return null;
   const art = record?.data;
-  const imageUrl = art?.imageFilename
-    ? commonsImageUrl(art.imageFilename, FOCUS_IMAGE_WIDTH)
-    : art?.thumbnailUrl;
 
   const facts: [label: string, value: string | undefined][] = [
     ["Artist", art?.artist],
@@ -61,13 +54,6 @@ export function InfoPanel() {
       <button className={styles.close} onClick={close} aria-label="Close">
         ✕
       </button>
-      {imageUrl && (
-        <img
-          className={styles.image}
-          src={imageUrl}
-          alt={art?.title ?? "Artwork"}
-        />
-      )}
       <div className={styles.body}>
         <h2 className={styles.title}>{art?.title ?? "…"}</h2>
         <dl className={styles.facts}>
@@ -105,7 +91,7 @@ export function InfoPanel() {
             )}
           </span>
         </footer>
-        <p className={styles.hint}>ESC or ✕ to keep walking</p>
+        <p className={styles.hint}>ESC or ✕ to return it to the wall</p>
       </div>
     </aside>
   );

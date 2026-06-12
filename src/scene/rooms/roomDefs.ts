@@ -24,6 +24,10 @@ export interface RoomDef {
   height: number;
   center: [x: number, z: number];
   wallThickness: number;
+  /** Per-room palette so each era reads differently. */
+  wallColor: string;
+  floorColor: string;
+  ceilingColor: string;
   /** All solids the player collides with: perimeter walls + obstacles. */
   colliders: AABB[];
   obstacles: Obstacle[];
@@ -75,6 +79,10 @@ export const impressionismRoom: RoomDef = makeRoom({
   height: 5,
   center: [0, 0],
   wallThickness: 0.3,
+  // soft sage, the classic Impressionist-gallery wall tone
+  wallColor: "#9aa78c",
+  floorColor: "#5c4a38",
+  ceilingColor: "#d8d2c8",
   spawn: [0, 4],
   obstacles: [
     // central visitor benches

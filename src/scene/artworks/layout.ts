@@ -1,5 +1,6 @@
 import { entriesForRoom } from "../../data/manifest";
 import type { FetchedArtwork } from "../../data/types";
+import { EYE_HEIGHT } from "../player/collision";
 import type { RoomDef } from "../rooms/roomDefs";
 
 export interface Placement {
@@ -99,6 +100,46 @@ export function getRoomPlacements(room: RoomDef): Map<string, Placement> {
     placementCache.set(room.id, placements);
   }
   return placements;
+}
+
+export interface FocusPose {
+  cameraPosition: [number, number, number];
+  lookTarget: [number, number, number];
+  /** Where the painting floats to, popped off the wall toward the viewer. */
+  paintingPosition: [number, number, number];
+}
+
+/**
+ * Shared focus geometry for inspect mode: the camera stands back from the
+ * wall at a distance scaled to the artwork, and the painting pops out
+ * toward the viewer — shifted slightly camera-left on wide screens so the
+ * info panel on the right never covers it.
+ */
+export function computeFocusPose(
+  placement: Placement,
+  width: number,
+  height: number,
+): FocusPose {
+  const [nx, nz] = placement.normal;
+  const [bx, , bz] = placement.position;
+  const distance = Math.min(4, Math.max(1.6, Math.max(width, height) * 1.25));
+  const pop = distance * 0.42;
+  const shift =
+    typeof window !== "undefined" && window.innerWidth > 640
+      ? distance * 0.12
+      : 0;
+  // camera faces -normal; its left along the wall is (-nz, nx)
+  const leftX = -nz;
+  const leftZ = nx;
+  return {
+    cameraPosition: [bx + nx * distance, EYE_HEIGHT, bz + nz * distance],
+    lookTarget: [bx, EYE_HEIGHT, bz],
+    paintingPosition: [
+      bx + nx * pop + leftX * shift,
+      EYE_HEIGHT,
+      bz + nz * pop + leftZ * shift,
+    ],
+  };
 }
 
 /**

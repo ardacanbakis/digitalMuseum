@@ -7,8 +7,10 @@ const KEY_MAP: Record<string, keyof typeof input.keys> = {
   KeyS: "back",
   ArrowDown: "back",
   KeyA: "left",
+  KeyQ: "left",
   ArrowLeft: "left",
   KeyD: "right",
+  KeyE: "right",
   ArrowRight: "right",
 };
 

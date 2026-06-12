@@ -2,7 +2,11 @@ import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 import { useStore } from "../../store";
-import { getRoomPlacements, paintingSize } from "../artworks/layout";
+import {
+  computeFocusPose,
+  getRoomPlacements,
+  paintingSize,
+} from "../artworks/layout";
 import type { RoomDef } from "../rooms/roomDefs";
 import { EYE_HEIGHT, WALK_SPEED, resolveMovement } from "./collision";
 import { input } from "./input";
@@ -63,15 +67,14 @@ export function Player({ room }: { room: RoomDef }) {
         if (placement) {
           const art = store.artworkData[store.selectedArtwork]?.data;
           const [w, h] = paintingSize(art, null, placement.maxWidth);
-          const distance = Math.min(4, Math.max(1.5, Math.max(w, h) * 1.2));
-          const position = new Vector3(
-            placement.position[0] + placement.normal[0] * distance,
-            EYE_HEIGHT,
-            placement.position[2] + placement.normal[1] * distance,
-          );
-          const lookAt = new Vector3(...placement.position);
+          const pose = computeFocusPose(placement, w, h);
+          const position = new Vector3(...pose.cameraPosition);
           const quaternion = new Quaternion().setFromRotationMatrix(
-            new Matrix4().lookAt(position, lookAt, UP),
+            new Matrix4().lookAt(
+              position,
+              new Vector3(...pose.lookTarget),
+              UP,
+            ),
           );
           focusRef.current = {
             id: store.selectedArtwork,

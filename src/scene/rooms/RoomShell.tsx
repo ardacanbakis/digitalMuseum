@@ -30,7 +30,7 @@ export function RoomShell({ room }: { room: RoomDef }) {
             room.depth + room.wallThickness * 2,
           ]}
         />
-        <meshStandardMaterial color="#5c4a38" />
+        <meshStandardMaterial color={room.floorColor} />
       </mesh>
 
       {/* ceiling */}
@@ -41,7 +41,7 @@ export function RoomShell({ room }: { room: RoomDef }) {
             room.depth + room.wallThickness * 2,
           ]}
         />
-        <meshStandardMaterial color="#d8d2c8" />
+        <meshStandardMaterial color={room.ceilingColor} />
       </mesh>
 
       {walls.map((aabb, i) => {
@@ -49,7 +49,7 @@ export function RoomShell({ room }: { room: RoomDef }) {
         return (
           <mesh key={`wall-${i}`} position={position}>
             <boxGeometry args={size} />
-            <meshStandardMaterial color="#a89e90" />
+            <meshStandardMaterial color={room.wallColor} />
           </mesh>
         );
       })}
