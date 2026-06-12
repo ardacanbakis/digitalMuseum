@@ -1,8 +1,9 @@
 import type { Object3D } from "three";
+import { manifestById } from "../../data/manifest";
 import { useStore } from "../../store";
 import { isTouchDevice } from "../player/input";
 import { requestLock } from "../player/usePointerLock";
-import { impressionismRoom } from "../rooms/roomDefs";
+import { roomById } from "../rooms/roomDefs";
 import { getRoomArtworkOrder } from "./layout";
 
 /** Meshes the crosshair/tap raycaster tests against. */
@@ -42,11 +43,14 @@ export function closeInspect(): void {
   if (!isTouchDevice()) requestLock();
 }
 
-/** Glide to the previous/next painting along the walls while inspecting. */
+/** Glide to the previous/next artwork in the same room while inspecting. */
 export function navigateArtwork(direction: 1 | -1): void {
   const store = useStore.getState();
   if (store.viewMode !== "inspecting" || !store.selectedArtwork) return;
-  const order = getRoomArtworkOrder(impressionismRoom);
+  const entry = manifestById.get(store.selectedArtwork);
+  const room = entry ? roomById.get(entry.room) : undefined;
+  if (!room) return;
+  const order = getRoomArtworkOrder(room);
   const index = order.indexOf(store.selectedArtwork);
   if (index === -1) return;
   store.setSelectedArtwork(

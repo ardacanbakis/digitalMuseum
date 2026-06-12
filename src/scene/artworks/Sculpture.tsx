@@ -1,18 +1,24 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Billboard } from "@react-three/drei";
 import { Vector3, type Group, type Material, type Mesh } from "three";
 import type { ArtworkEntry } from "../../data/types";
 import { useStore } from "../../store";
-import { Frame } from "./Frame";
 import { registerArtworkMesh, selectArtwork } from "./interaction";
 import { computeFocusPose, paintingSize, type Placement } from "./layout";
 import { useImageTexture } from "./useImageTexture";
 
-const POP_DAMPING = 6; // pop-out/return animation speed
+const POP_DAMPING = 6;
 const MAX_DELTA = 0.05;
-const DIMMED_OPACITY = 0.12; // unfocused paintings fade while one is inspected
+const DIMMED_OPACITY = 0.12;
+const MAX_SCULPTURE_HEIGHT = 1.9; // photo height above the pedestal
 
-export function Painting({
+/**
+ * A sculpture shown as a photograph on a pedestal: billboarded plane that
+ * always faces the visitor (the pedestal box itself is part of the room).
+ * True 3D museum scans (Smithsonian glTF etc.) can replace this later.
+ */
+export function Sculpture({
   entry,
   placement,
   active,
@@ -31,30 +37,35 @@ export function Painting({
 
   const loUrl = art?.imageUrlSmall ?? art?.thumbnailUrl;
   const hiUrl = art?.imageUrlLarge ?? loUrl;
-  // Hi-res while focused; the hook keeps the old texture until the new
-  // one decodes, so the swap is seamless both ways. Inactive (distant)
-  // rooms pass undefined, which frees the texture.
   const url = active || selected ? (selected ? hiUrl : loUrl) : undefined;
   const { texture, aspect } = useImageTexture(url);
 
-  const [width, height] = paintingSize(art, aspect, placement.maxWidth);
+  let [width, height] = paintingSize(art, aspect, placement.maxWidth);
+  if (height > MAX_SCULPTURE_HEIGHT) {
+    width *= MAX_SCULPTURE_HEIGHT / height;
+    height = MAX_SCULPTURE_HEIGHT;
+  }
 
   const groupRef = useRef<Group>(null);
+  // Group origin = photo center, resting on the pedestal top
   const basePosition = useMemo(
-    () => new Vector3(...placement.position),
-    [placement],
+    () =>
+      new Vector3(
+        placement.position[0],
+        placement.position[1] + height / 2 + 0.02,
+        placement.position[2],
+      ),
+    [placement, height],
   );
   const popPosition = useMemo(
     () =>
-      new Vector3(...computeFocusPose(placement, width, height).paintingPosition),
+      new Vector3(
+        ...computeFocusPose(placement, width, height).paintingPosition,
+      ),
     [placement, width, height],
   );
-
   const opacityRef = useRef(1);
 
-  // Pop off the wall toward the viewer when focused, glide back on close;
-  // fade the rest of the room while any painting is inspected so a large
-  // popped canvas doesn't visually clash with its neighbors.
   useFrame((_, delta) => {
     const group = groupRef.current;
     if (!group) return;
@@ -82,44 +93,38 @@ export function Painting({
     }
   });
 
-  const canvasRef = useRef<Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
   useEffect(() => {
-    if (!canvasRef.current) return;
-    return registerArtworkMesh(canvasRef.current, id);
+    if (!meshRef.current) return;
+    return registerArtworkMesh(meshRef.current, id);
   }, [id]);
 
   return (
-    <group
-      ref={groupRef}
-      position={placement.position}
-      rotation-y={placement.rotationY}
-    >
-      <Frame width={width} height={height} hovered={hovered} />
-      <mesh
-        ref={canvasRef}
-        position-z={0.04}
-        onClick={(e) => {
-          e.stopPropagation();
-          // Touch / unlocked-pointer path; crosshair clicks are handled
-          // by InteractionManager while the pointer is locked. Ignore
-          // drag-pan releases (large pointer travel).
-          if (document.pointerLockElement || e.delta > 5) return;
-          const { viewMode, selectedArtwork, setSelectedArtwork } =
-            useStore.getState();
-          if (viewMode === "walking") selectArtwork(id);
-          // While inspecting, clicking a dimmed neighbor switches to it
-          else if (viewMode === "inspecting" && selectedArtwork !== id) {
-            setSelectedArtwork(id);
-          }
-        }}
-      >
-        <planeGeometry args={[width, height]} />
-        {texture ? (
-          <meshBasicMaterial map={texture} toneMapped={false} />
-        ) : (
-          <meshStandardMaterial color="#33291f" />
-        )}
-      </mesh>
+    <group ref={groupRef} position={basePosition.toArray()}>
+      <Billboard lockX lockZ>
+        <mesh
+          ref={meshRef}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (document.pointerLockElement || e.delta > 5) return;
+            const { viewMode, selectedArtwork, setSelectedArtwork } =
+              useStore.getState();
+            if (viewMode === "walking") selectArtwork(id);
+            else if (viewMode === "inspecting" && selectedArtwork !== id) {
+              setSelectedArtwork(id);
+            }
+          }}
+        >
+          <planeGeometry args={[width, height]} />
+          {texture ? (
+            <meshBasicMaterial map={texture} toneMapped={false} />
+          ) : (
+            <meshStandardMaterial
+              color={hovered ? "#5a5347" : "#494337"}
+            />
+          )}
+        </mesh>
+      </Billboard>
     </group>
   );
 }

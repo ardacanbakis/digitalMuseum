@@ -1,4 +1,5 @@
 import { commonsFilePageUrl } from "../api/commons";
+import { manifestById } from "../data/manifest";
 import { closeInspect } from "../scene/artworks/interaction";
 import { useStore } from "../store";
 import styles from "./InfoPanel.module.css";
@@ -11,6 +12,7 @@ export function InfoPanel() {
 
   if (!selectedId) return null;
   const art = record?.data;
+  const isSculpture = manifestById.get(selectedId)?.type === "sculpture";
 
   const facts: [label: string, value: string | undefined][] = [
     ["Artist", art?.artist],
@@ -37,6 +39,14 @@ export function InfoPanel() {
       </button>
       <div className={styles.body}>
         <h2 className={styles.title}>{art?.title ?? "…"}</h2>
+        {isSculpture && (
+          <p className={styles.sculptureNote}>
+            Sculpture — shown here as a photograph. The original is a
+            three-dimensional work meant to be seen in the round; free 3D
+            museum scans (e.g. the Smithsonian's) could replace this view in
+            the future.
+          </p>
+        )}
         <dl className={styles.facts}>
           {facts.map(([label, value]) =>
             value ? (

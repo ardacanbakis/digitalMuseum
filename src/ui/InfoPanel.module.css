@@ -50,6 +50,15 @@
   padding-right: 30px;
 }
 
+.sculptureNote {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: #b8ab97;
+  border-left: 2px solid #8f8779;
+  padding-left: 10px;
+  margin-bottom: 12px;
+}
+
 .facts {
   margin-bottom: 14px;
 }

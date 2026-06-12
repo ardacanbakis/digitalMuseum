@@ -1,54 +1,119 @@
 import { entriesForRoom } from "../../data/manifest";
 import type { FetchedArtwork } from "../../data/types";
 import { EYE_HEIGHT } from "../player/collision";
-import type { RoomDef } from "../rooms/roomDefs";
+import {
+  allRooms,
+  PEDESTAL_HEIGHT,
+  type RoomDef,
+  type WallSide,
+} from "../rooms/roomDefs";
 
 export interface Placement {
   artworkId: string;
-  /** Painting center, nudged slightly off the wall plane. */
+  /** Artwork center, nudged slightly off the wall plane (paintings) or
+   * above the pedestal (sculptures). */
   position: [number, number, number];
   rotationY: number;
-  /** XZ wall normal pointing into the room. */
+  /** XZ normal pointing into the room / toward the viewer side. */
   normal: [number, number];
-  /** Widest a painting may render in this slot without crowding neighbors. */
+  /** Widest the artwork may render in this slot without crowding. */
   maxWidth: number;
+  kind: "wall" | "pedestal";
 }
 
 const PAINTING_CENTER_Y = 1.5;
-const WALL_MARGIN = 1.4; // keep clear of corners (and doorways in Phase 4)
+const WALL_MARGIN = 1.4; // keep clear of corners
+const DOOR_CLEARANCE = 0.7; // extra space either side of a doorway
 const WALL_OFFSET = 0.05;
 const MAX_HEIGHT = 2.2;
 
-interface WallSpec {
+interface SegmentSpec {
   axis: "x" | "z";
   fixed: number;
   normal: [number, number];
   rotationY: number;
-  length: number;
-  center: number;
-  /** Traverse the wall backwards so slot order runs clockwise around the room. */
+  /** Usable slot range along the wall axis (start < end). */
+  start: number;
+  end: number;
+  /** Fill slots from `end` toward `start` (clockwise traversal). */
   reverse: boolean;
 }
 
-/** Walls in clockwise perimeter order (N→E→S→W), so that "next painting"
- * navigation in inspect mode walks naturally around the room. */
-function wallSpecs(room: RoomDef): WallSpec[] {
+const SIDE_GEOMETRY: Record<
+  WallSide,
+  { normal: [number, number]; rotationY: number; reverse: boolean }
+> = {
+  north: { normal: [0, 1], rotationY: 0, reverse: false },
+  east: { normal: [-1, 0], rotationY: -Math.PI / 2, reverse: false },
+  south: { normal: [0, -1], rotationY: Math.PI, reverse: true },
+  west: { normal: [1, 0], rotationY: Math.PI / 2, reverse: true },
+};
+
+/** Sides in clockwise perimeter order so "next painting" walks the room. */
+const SIDE_ORDER: WallSide[] = ["north", "east", "south", "west"];
+
+/** Usable wall segments per side: full span minus corners and door gaps. */
+function segmentSpecs(room: RoomDef): SegmentSpec[] {
   const [cx, cz] = room.center;
   const hw = room.width / 2;
   const hd = room.depth / 2;
-  const lengthX = room.width - WALL_MARGIN * 2;
-  const lengthZ = room.depth - WALL_MARGIN * 2;
-  return [
-    { axis: "x", fixed: cz - hd, normal: [0, 1], rotationY: 0, length: lengthX, center: cx, reverse: false },
-    { axis: "z", fixed: cx + hw, normal: [-1, 0], rotationY: -Math.PI / 2, length: lengthZ, center: cz, reverse: false },
-    { axis: "x", fixed: cz + hd, normal: [0, -1], rotationY: Math.PI, length: lengthX, center: cx, reverse: true },
-    { axis: "z", fixed: cx - hw, normal: [1, 0], rotationY: Math.PI / 2, length: lengthZ, center: cz, reverse: true },
-  ];
+  const specs: SegmentSpec[] = [];
+
+  for (const side of SIDE_ORDER) {
+    const axis: "x" | "z" = side === "north" || side === "south" ? "x" : "z";
+    const fixed =
+      side === "north"
+        ? cz - hd
+        : side === "south"
+          ? cz + hd
+          : side === "west"
+            ? cx - hw
+            : cx + hw;
+    const along = axis === "x" ? cx : cz;
+    const half = axis === "x" ? hw : hd;
+    const geo = SIDE_GEOMETRY[side];
+
+    const gaps = room.doors
+      .filter((d) => d.side === side)
+      .map((d) => {
+        const at = axis === "x" ? d.center[0] : d.center[1];
+        return {
+          from: at - d.width / 2 - DOOR_CLEARANCE,
+          to: at + d.width / 2 + DOOR_CLEARANCE,
+        };
+      })
+      .sort((a, b) => a.from - b.from);
+
+    let cursor = along - half + WALL_MARGIN;
+    const wallEnd = along + half - WALL_MARGIN;
+    const pieces: { start: number; end: number }[] = [];
+    for (const gap of gaps) {
+      if (gap.from > cursor) pieces.push({ start: cursor, end: gap.from });
+      cursor = Math.max(cursor, gap.to);
+    }
+    if (cursor < wallEnd) pieces.push({ start: cursor, end: wallEnd });
+
+    const ordered = geo.reverse ? [...pieces].reverse() : pieces;
+    for (const piece of ordered) {
+      if (piece.end - piece.start < 1.2) continue; // too small for a slot
+      specs.push({
+        axis,
+        fixed,
+        normal: geo.normal,
+        rotationY: geo.rotationY,
+        start: piece.start,
+        end: piece.end,
+        reverse: geo.reverse,
+      });
+    }
+  }
+  return specs;
 }
 
-/** Apportion n slots across walls proportionally to length (largest remainder). */
+/** Apportion n slots across segments proportionally (largest remainder). */
 function apportion(lengths: number[], n: number): number[] {
   const total = lengths.reduce((a, b) => a + b, 0);
+  if (total === 0) return lengths.map(() => 0);
   const exact = lengths.map((l) => (n * l) / total);
   const counts = exact.map(Math.floor);
   let remaining = n - counts.reduce((a, b) => a + b, 0);
@@ -63,38 +128,60 @@ function apportion(lengths: number[], n: number): number[] {
 }
 
 function computePlacements(room: RoomDef): Map<string, Placement> {
-  const entries = entriesForRoom(room.id).filter((e) => e.type === "painting");
-  const walls = wallSpecs(room);
-  const counts = apportion(
-    walls.map((w) => w.length),
-    entries.length,
-  );
-
+  const entries = entriesForRoom(room.id);
+  const paintings = entries.filter((e) => e.type === "painting");
+  const sculptures = entries.filter((e) => e.type === "sculpture");
   const placements = new Map<string, Placement>();
+
+  // Paintings along wall segments
+  const segments = segmentSpecs(room);
+  const counts = apportion(
+    segments.map((s) => s.end - s.start),
+    paintings.length,
+  );
   let i = 0;
-  walls.forEach((wall, wi) => {
-    const count = counts[wi];
+  segments.forEach((seg, si) => {
+    const count = counts[si];
     if (count === 0) return;
-    const spacing = wall.length / count;
-    for (let s = 0; s < count && i < entries.length; s++, i++) {
+    const length = seg.end - seg.start;
+    const spacing = length / count;
+    for (let s = 0; s < count && i < paintings.length; s++, i++) {
       const offset = spacing * (s + 0.5);
-      const t = wall.reverse
-        ? wall.center + wall.length / 2 - offset
-        : wall.center - wall.length / 2 + offset;
-      const x =
-        wall.axis === "x" ? t : wall.fixed + wall.normal[0] * WALL_OFFSET;
-      const z =
-        wall.axis === "x" ? wall.fixed + wall.normal[1] * WALL_OFFSET : t;
-      const entry = entries[i];
+      const t = seg.reverse ? seg.end - offset : seg.start + offset;
+      const x = seg.axis === "x" ? t : seg.fixed + seg.normal[0] * WALL_OFFSET;
+      const z = seg.axis === "x" ? seg.fixed + seg.normal[1] * WALL_OFFSET : t;
+      const entry = paintings[i];
       placements.set(entry.wikidataId, {
         artworkId: entry.wikidataId,
         position: [x, PAINTING_CENTER_Y, z],
-        rotationY: wall.rotationY,
-        normal: wall.normal,
+        rotationY: seg.rotationY,
+        normal: seg.normal,
         maxWidth: spacing * 0.82,
+        kind: "wall",
       });
     }
   });
+
+  // Sculptures on pedestals, facing the room center
+  const [cx, cz] = room.center;
+  (room.pedestals ?? []).forEach((pedestal, pi) => {
+    const entry = sculptures[pi];
+    if (!entry) return;
+    const [px, pz] = pedestal;
+    const dx = cx - px;
+    const dz = cz - pz;
+    const len = Math.hypot(dx, dz) || 1;
+    const normal: [number, number] = [dx / len, dz / len];
+    placements.set(entry.wikidataId, {
+      artworkId: entry.wikidataId,
+      position: [px, PEDESTAL_HEIGHT, pz],
+      rotationY: Math.atan2(normal[0], normal[1]),
+      normal,
+      maxWidth: 2.0,
+      kind: "pedestal",
+    });
+  });
+
   return placements;
 }
 
@@ -114,10 +201,19 @@ export function getRoomArtworkOrder(room: RoomDef): string[] {
   return [...getRoomPlacements(room).keys()];
 }
 
+/** Find an artwork's placement in any room. */
+export function getPlacement(artworkId: string): Placement | undefined {
+  for (const room of allRooms) {
+    const placement = getRoomPlacements(room).get(artworkId);
+    if (placement) return placement;
+  }
+  return undefined;
+}
+
 export interface FocusPose {
   cameraPosition: [number, number, number];
   lookTarget: [number, number, number];
-  /** Where the painting floats to, popped off the wall toward the viewer. */
+  /** Where the artwork floats to, popped toward the viewer. */
   paintingPosition: [number, number, number];
 }
 
@@ -155,7 +251,7 @@ export function computeFocusPose(
 }
 
 /**
- * Painting size in meters: real Wikidata dimensions when available
+ * Artwork size in meters: real Wikidata dimensions when available
  * (clamped to fit the slot), else texture aspect at a default height.
  */
 export function paintingSize(

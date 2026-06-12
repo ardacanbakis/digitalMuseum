@@ -1,0 +1,84 @@
+.backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 8, 6, 0.6);
+  backdrop-filter: blur(3px);
+  pointer-events: auto;
+}
+
+.panel {
+  width: min(680px, 94vw);
+  padding: 18px 22px 14px;
+  border-radius: 10px;
+  border: 1px solid #4a4136;
+  background: rgba(22, 18, 13, 0.96);
+  text-align: center;
+}
+
+.heading {
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+}
+
+.sub {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: #8d8170;
+}
+
+.map {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.room {
+  cursor: pointer;
+}
+
+.room rect {
+  stroke: #1c150e;
+  stroke-width: 0.35;
+  opacity: 0.85;
+  transition: opacity 0.12s ease;
+}
+
+.room:hover rect {
+  opacity: 1;
+  stroke: #d4af37;
+}
+
+.room[data-current="true"] rect {
+  stroke: #f0e9dd;
+  stroke-width: 0.5;
+}
+
+.roomLabel {
+  font-size: 1.7px;
+  fill: #f0e9dd;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  paint-order: stroke;
+  stroke: rgba(20, 16, 12, 0.7);
+  stroke-width: 0.45px;
+  pointer-events: none;
+}
+
+.door {
+  fill: #d4af37;
+  opacity: 0.9;
+}
+
+.player {
+  fill: #ff5d45;
+  stroke: #fff;
+  stroke-width: 0.35;
+}
+
+.hint {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: #6d6354;
+}

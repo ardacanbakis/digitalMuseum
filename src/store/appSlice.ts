@@ -1,7 +1,9 @@
 import type { StateCreator } from "zustand";
+import type { RoomId } from "../data/types";
 
-/** "menu" = overlay shown, "walking" = first-person, "inspecting" = artwork focus. */
-export type ViewMode = "menu" | "walking" | "inspecting";
+/** "menu" = overlay, "walking" = first-person, "inspecting" = artwork
+ * focus, "map" = minimap/teleport overlay. */
+export type ViewMode = "menu" | "walking" | "inspecting" | "map";
 
 export type QualityPreset = "high" | "low";
 
@@ -9,12 +11,27 @@ export interface Settings {
   quality: QualityPreset;
 }
 
+export interface TeleportTarget {
+  x: number;
+  z: number;
+  yaw: number;
+}
+
 export interface AppSlice {
   viewMode: ViewMode;
-  currentRoom: string;
+  currentRoom: RoomId;
+  /** Rooms close enough to render artwork textures for. */
+  activeRooms: RoomId[];
+  /** Player XZ, throttled — drives the minimap marker. */
+  playerPos: [number, number];
+  teleportTarget: TeleportTarget | null;
   settings: Settings;
   setViewMode: (mode: ViewMode) => void;
-  setCurrentRoom: (roomId: string) => void;
+  setCurrentRoom: (roomId: RoomId) => void;
+  setActiveRooms: (rooms: RoomId[]) => void;
+  setPlayerPos: (x: number, z: number) => void;
+  requestTeleport: (target: TeleportTarget) => void;
+  clearTeleport: () => void;
   setQuality: (quality: QualityPreset) => void;
 }
 
@@ -22,10 +39,17 @@ export const createAppSlice: StateCreator<AppSlice, [], [], AppSlice> = (
   set,
 ) => ({
   viewMode: "menu",
-  currentRoom: "impressionism",
+  currentRoom: "lobby",
+  activeRooms: ["lobby"],
+  playerPos: [0, 6],
+  teleportTarget: null,
   settings: { quality: "high" },
   setViewMode: (mode) => set({ viewMode: mode }),
   setCurrentRoom: (roomId) => set({ currentRoom: roomId }),
+  setActiveRooms: (rooms) => set({ activeRooms: rooms }),
+  setPlayerPos: (x, z) => set({ playerPos: [x, z] }),
+  requestTeleport: (target) => set({ teleportTarget: target }),
+  clearTeleport: () => set({ teleportTarget: null }),
   setQuality: (quality) =>
     set((s) => ({ settings: { ...s.settings, quality } })),
 });

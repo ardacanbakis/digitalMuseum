@@ -1,6 +1,6 @@
 import { closeInspect } from "../artworks/interaction";
 import { useStore } from "../../store";
-import type { AABB, RoomDef } from "./roomDefs";
+import { DOOR_HEIGHT, type AABB, type RoomDef } from "./roomDefs";
 
 function boxFromAABB(aabb: AABB, height: number, y = height / 2) {
   return {
@@ -19,8 +19,6 @@ function boxFromAABB(aabb: AABB, height: number, y = height / 2) {
 
 export function RoomShell({ room }: { room: RoomDef }) {
   const [cx, cz] = room.center;
-  const wallCount = 4; // first 4 colliders are the perimeter walls
-  const walls = room.colliders.slice(0, wallCount);
 
   return (
     <group
@@ -60,7 +58,7 @@ export function RoomShell({ room }: { room: RoomDef }) {
         <meshStandardMaterial color={room.ceilingColor} />
       </mesh>
 
-      {walls.map((aabb, i) => {
+      {room.walls.map((aabb, i) => {
         const { position, size } = boxFromAABB(aabb, room.height);
         return (
           <mesh key={`wall-${i}`} position={position}>
@@ -70,7 +68,19 @@ export function RoomShell({ room }: { room: RoomDef }) {
         );
       })}
 
-      {/* benches and other solid props */}
+      {/* lintels above door openings */}
+      {room.lintels.map((aabb, i) => {
+        const h = room.height - DOOR_HEIGHT;
+        const { position, size } = boxFromAABB(aabb, h, DOOR_HEIGHT + h / 2);
+        return (
+          <mesh key={`lintel-${i}`} position={position}>
+            <boxGeometry args={size} />
+            <meshStandardMaterial color={room.wallColor} />
+          </mesh>
+        );
+      })}
+
+      {/* benches, pedestals and other solid props */}
       {room.obstacles.map((o, i) => {
         const { position, size } = boxFromAABB(o.aabb, o.height);
         return (

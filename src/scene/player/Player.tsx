@@ -11,10 +11,10 @@ import {
 import { useStore } from "../../store";
 import {
   computeFocusPose,
-  getRoomPlacements,
+  getPlacement,
   paintingSize,
 } from "../artworks/layout";
-import type { RoomDef } from "../rooms/roomDefs";
+import { allColliders, lobby } from "../rooms/roomDefs";
 import { EYE_HEIGHT, RUN_SPEED, WALK_SPEED, resolveMovement } from "./collision";
 import { input } from "./input";
 import { useKeyboardControls } from "./useKeyboardControls";
@@ -45,17 +45,17 @@ interface FocusTarget {
   quaternion: Quaternion;
 }
 
-export function Player({ room }: { room: RoomDef }) {
+export function Player() {
   const camera = useThree((s) => s.camera);
-  const yaw = useRef(Math.PI); // spawn facing -Z side of the room
+  const yaw = useRef(lobby.spawnYaw);
   const pitch = useRef(0);
 
   useKeyboardControls();
 
   useEffect(() => {
     camera.rotation.order = "YXZ";
-    camera.position.set(room.spawn[0], EYE_HEIGHT, room.spawn[1]);
-  }, [camera, room]);
+    camera.position.set(lobby.spawn[0], EYE_HEIGHT, lobby.spawn[1]);
+  }, [camera]);
 
   // Desktop mouse-look while pointer is locked
   useEffect(() => {
@@ -74,6 +74,7 @@ export function Player({ room }: { room: RoomDef }) {
 
   const focusRef = useRef<FocusTarget | null>(null);
   const wasInspecting = useRef(false);
+  const syncTimer = useRef(0);
   const zoomRef = useRef(1);
   const panRef = useRef({ x: 0, y: 0 });
   const dragRef = useRef<{ pointerId: number; x: number; y: number } | null>(
@@ -156,7 +157,7 @@ export function Player({ room }: { room: RoomDef }) {
     // Inspect mode: glide to a framed viewing position in front of the work
     if (store.viewMode === "inspecting" && store.selectedArtwork) {
       if (focusRef.current?.id !== store.selectedArtwork) {
-        const placement = getRoomPlacements(room).get(store.selectedArtwork);
+        const placement = getPlacement(store.selectedArtwork);
         if (placement) {
           const art = store.artworkData[store.selectedArtwork]?.data;
           const [w, h] = paintingSize(art, null, placement.maxWidth);
@@ -213,6 +214,15 @@ export function Player({ room }: { room: RoomDef }) {
 
     if (store.viewMode !== "walking") return;
 
+    // Teleport requests from the map overlay
+    if (store.teleportTarget) {
+      const t = store.teleportTarget;
+      camera.position.set(t.x, EYE_HEIGHT, t.z);
+      yaw.current = t.yaw;
+      pitch.current = 0;
+      store.clearTeleport();
+    }
+
     // Touch drag-look (accumulated by TouchControls)
     if (input.lookDelta.x !== 0 || input.lookDelta.y !== 0) {
       yaw.current -= input.lookDelta.x * TOUCH_LOOK_SENSITIVITY;
@@ -226,6 +236,19 @@ export function Player({ room }: { room: RoomDef }) {
     }
 
     camera.rotation.set(pitch.current, yaw.current, 0);
+
+    // Throttled position sync for the minimap marker
+    syncTimer.current += dt;
+    if (syncTimer.current > 0.25) {
+      syncTimer.current = 0;
+      const [px, pz] = store.playerPos;
+      if (
+        Math.abs(px - camera.position.x) > 0.1 ||
+        Math.abs(pz - camera.position.z) > 0.1
+      ) {
+        store.setPlayerPos(camera.position.x, camera.position.z);
+      }
+    }
 
     // Movement intent: keyboard (digital) + joystick (analog)
     let forward =
@@ -254,7 +277,7 @@ export function Player({ room }: { room: RoomDef }) {
       camera.position.z,
       dx,
       dz,
-      room.colliders,
+      allColliders,
     );
     camera.position.set(nx, EYE_HEIGHT, nz);
   });

@@ -17,7 +17,13 @@ export function useImageTexture(url: string | undefined): {
   const currentRef = useRef<Texture | null>(null);
 
   useEffect(() => {
-    if (!url) return;
+    if (!url) {
+      // Room deactivated (player moved away): free the GPU memory
+      currentRef.current?.dispose();
+      currentRef.current = null;
+      setState({ texture: null, aspect: null });
+      return;
+    }
     let cancelled = false;
     const loader = new TextureLoader();
     loader.setCrossOrigin("anonymous");

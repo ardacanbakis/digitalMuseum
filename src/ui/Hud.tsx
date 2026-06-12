@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
 import { closeInspect } from "../scene/artworks/interaction";
-import { usePointerLock } from "../scene/player/usePointerLock";
+import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
 import { isTouchDevice } from "../scene/player/input";
 import styles from "./Hud.module.css";
 
@@ -14,9 +14,22 @@ const KEYBINDINGS: [keys: string, action: string][] = [
   ["← → / Q E", "Browse paintings while inspecting"],
   ["Scroll wheel", "Zoom while inspecting"],
   ["Click + drag", "Pan across the painting when zoomed"],
+  ["M", "Museum map & teleport"],
   ["ESC / click away", "Put the painting back"],
   ["ESC (walking)", "Open & close this menu"],
 ];
+
+/** Toggle the floor-plan overlay from walking mode (and back). */
+function toggleMap() {
+  const state = useStore.getState();
+  if (state.viewMode === "walking") {
+    state.setViewMode("map");
+    if (document.pointerLockElement) document.exitPointerLock();
+  } else if (state.viewMode === "map") {
+    state.setViewMode("walking");
+    if (!isTouchDevice()) requestLock();
+  }
+}
 
 export function Hud() {
   const viewMode = useStore((s) => s.viewMode);
@@ -28,15 +41,21 @@ export function Hud() {
   const [showAbout, setShowAbout] = useState(false);
 
   // All ESC behavior lives in this one handler so modes never fight:
-  // inspecting → put the painting back; walking (unlocked) → menu;
-  // menu → re-enter. While pointer-locked, the browser itself turns ESC
-  // into an unlock, which lands in walking→menu via pointerlockchange.
+  // inspecting → put the painting back; map → close map; walking
+  // (unlocked) → menu; menu → re-enter. While pointer-locked, the browser
+  // itself turns ESC into an unlock, landing in walking→menu via
+  // pointerlockchange. M toggles the museum map.
   useEffect(() => {
     if (touch) return;
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "KeyM" && !e.repeat) {
+        toggleMap();
+        return;
+      }
       if (e.key !== "Escape") return;
       const state = useStore.getState();
       if (state.viewMode === "inspecting") closeInspect();
+      else if (state.viewMode === "map") toggleMap();
       else if (document.pointerLockElement) return;
       else if (state.viewMode === "menu") enter();
       else state.setViewMode("menu");
@@ -116,7 +135,7 @@ export function Hud() {
     );
   }
 
-  if (viewMode === "inspecting") return null;
+  if (viewMode === "inspecting" || viewMode === "map") return null;
 
   return (
     <>
@@ -136,13 +155,22 @@ export function Hud() {
         </div>
       )}
       {touch && (
-        <button
-          className={styles.exitButton}
-          onClick={exit}
-          aria-label="Back to menu"
-        >
-          ✕
-        </button>
+        <>
+          <button
+            className={styles.exitButton}
+            onClick={exit}
+            aria-label="Back to menu"
+          >
+            ✕
+          </button>
+          <button
+            className={styles.mapButton}
+            onClick={toggleMap}
+            aria-label="Museum map"
+          >
+            🗺
+          </button>
+        </>
       )}
     </>
   );
