@@ -15,7 +15,7 @@ function boxFromAABB(aabb: AABB, height: number, y = height / 2) {
   };
 }
 
-export function GrayBoxRoom({ room }: { room: RoomDef }) {
+export function RoomShell({ room }: { room: RoomDef }) {
   const [cx, cz] = room.center;
   const wallCount = 4; // first 4 colliders are the perimeter walls
   const walls = room.colliders.slice(0, wallCount);
@@ -30,7 +30,7 @@ export function GrayBoxRoom({ room }: { room: RoomDef }) {
             room.depth + room.wallThickness * 2,
           ]}
         />
-        <meshStandardMaterial color="#4a423a" />
+        <meshStandardMaterial color="#5c4a38" />
       </mesh>
 
       {/* ceiling */}
@@ -41,7 +41,7 @@ export function GrayBoxRoom({ room }: { room: RoomDef }) {
             room.depth + room.wallThickness * 2,
           ]}
         />
-        <meshStandardMaterial color="#39322b" />
+        <meshStandardMaterial color="#d8d2c8" />
       </mesh>
 
       {walls.map((aabb, i) => {
@@ -49,12 +49,12 @@ export function GrayBoxRoom({ room }: { room: RoomDef }) {
         return (
           <mesh key={`wall-${i}`} position={position}>
             <boxGeometry args={size} />
-            <meshStandardMaterial color="#6e655a" />
+            <meshStandardMaterial color="#a89e90" />
           </mesh>
         );
       })}
 
-      {/* colored reference boxes so motion is perceptible */}
+      {/* benches and other solid props */}
       {room.obstacles.map((o, i) => {
         const { position, size } = boxFromAABB(o.aabb, o.height);
         return (

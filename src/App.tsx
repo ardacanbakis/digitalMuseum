@@ -5,6 +5,7 @@ import { setLockElement } from "./scene/player/usePointerLock";
 import { EYE_HEIGHT } from "./scene/player/collision";
 import { DebugPage } from "./ui/DebugPage";
 import { Hud } from "./ui/Hud";
+import { InfoPanel } from "./ui/InfoPanel";
 import { TouchControls } from "./ui/TouchControls";
 
 const isDebug = new URLSearchParams(window.location.search).has("debug");
@@ -23,6 +24,7 @@ export default function App() {
       <div className="overlay">
         <Hud />
         <TouchControls />
+        <InfoPanel />
       </div>
     </div>
   );

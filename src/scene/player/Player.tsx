@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 import { useStore } from "../../store";
+import { getRoomPlacements, paintingSize } from "../artworks/layout";
 import type { RoomDef } from "../rooms/roomDefs";
 import { EYE_HEIGHT, WALK_SPEED, resolveMovement } from "./collision";
 import { input } from "./input";
@@ -10,6 +12,15 @@ const MOUSE_SENSITIVITY = 0.0022;
 const TOUCH_LOOK_SENSITIVITY = 0.005;
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
 const MAX_DELTA = 0.05; // clamp dt so tab-switches can't tunnel through walls
+const FOCUS_DAMPING = 4; // camera glide speed toward a focused artwork
+
+const UP = new Vector3(0, 1, 0);
+
+interface FocusTarget {
+  id: string;
+  position: Vector3;
+  quaternion: Quaternion;
+}
 
 export function Player({ room }: { room: RoomDef }) {
   const camera = useThree((s) => s.camera);
@@ -38,9 +49,57 @@ export function Player({ room }: { room: RoomDef }) {
     return () => document.removeEventListener("mousemove", onMouseMove);
   }, []);
 
+  const focusRef = useRef<FocusTarget | null>(null);
+  const wasInspecting = useRef(false);
+
   useFrame((_, delta) => {
-    if (useStore.getState().viewMode !== "walking") return;
+    const store = useStore.getState();
     const dt = Math.min(delta, MAX_DELTA);
+
+    // Inspect mode: glide to a framed viewing position in front of the work
+    if (store.viewMode === "inspecting" && store.selectedArtwork) {
+      if (focusRef.current?.id !== store.selectedArtwork) {
+        const placement = getRoomPlacements(room).get(store.selectedArtwork);
+        if (placement) {
+          const art = store.artworkData[store.selectedArtwork]?.data;
+          const [w, h] = paintingSize(art, null, placement.maxWidth);
+          const distance = Math.min(4, Math.max(1.5, Math.max(w, h) * 1.2));
+          const position = new Vector3(
+            placement.position[0] + placement.normal[0] * distance,
+            EYE_HEIGHT,
+            placement.position[2] + placement.normal[1] * distance,
+          );
+          const lookAt = new Vector3(...placement.position);
+          const quaternion = new Quaternion().setFromRotationMatrix(
+            new Matrix4().lookAt(position, lookAt, UP),
+          );
+          focusRef.current = {
+            id: store.selectedArtwork,
+            position,
+            quaternion,
+          };
+        }
+      }
+      const focus = focusRef.current;
+      if (focus) {
+        const k = 1 - Math.exp(-FOCUS_DAMPING * dt);
+        camera.position.lerp(focus.position, k);
+        camera.quaternion.slerp(focus.quaternion, k);
+      }
+      wasInspecting.current = true;
+      return;
+    }
+
+    focusRef.current = null;
+    if (wasInspecting.current) {
+      // Resume walking from wherever the glide left the camera
+      wasInspecting.current = false;
+      const e = new Euler().setFromQuaternion(camera.quaternion, "YXZ");
+      yaw.current = e.y;
+      pitch.current = e.x;
+    }
+
+    if (store.viewMode !== "walking") return;
 
     // Touch drag-look (accumulated by TouchControls)
     if (input.lookDelta.x !== 0 || input.lookDelta.y !== 0) {

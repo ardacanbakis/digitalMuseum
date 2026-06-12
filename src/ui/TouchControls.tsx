@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "../store";
+import { raycastTap } from "../scene/artworks/interaction";
 import { input, isTouchDevice } from "../scene/player/input";
 import styles from "./TouchControls.module.css";
 
 const JOYSTICK_RADIUS = 50; // px travel of the stick knob
+const TAP_MAX_DISTANCE = 10; // px of drift before a touch stops being a tap
+const TAP_MAX_DURATION = 350; // ms
 
 /**
  * Touch fallback: left-zone joystick drives input.joystick, right-zone drag
@@ -17,6 +20,7 @@ export function TouchControls() {
   const joystickOrigin = useRef({ x: 0, y: 0 });
   const lookPointer = useRef<number | null>(null);
   const lookLast = useRef({ x: 0, y: 0 });
+  const lookStart = useRef({ x: 0, y: 0, time: 0, moved: 0 });
 
   useEffect(() => setTouch(isTouchDevice()), []);
 
@@ -45,6 +49,13 @@ export function TouchControls() {
         input.lookDelta.x += e.clientX - lookLast.current.x;
         input.lookDelta.y += e.clientY - lookLast.current.y;
         lookLast.current = { x: e.clientX, y: e.clientY };
+        lookStart.current.moved = Math.max(
+          lookStart.current.moved,
+          Math.hypot(
+            e.clientX - lookStart.current.x,
+            e.clientY - lookStart.current.y,
+          ),
+        );
       }
     };
 
@@ -56,6 +67,14 @@ export function TouchControls() {
         setKnob(0, 0);
       } else if (e.pointerId === lookPointer.current) {
         lookPointer.current = null;
+        // A short, still touch is a tap → try to select an artwork
+        if (
+          e.type === "pointerup" &&
+          lookStart.current.moved < TAP_MAX_DISTANCE &&
+          performance.now() - lookStart.current.time < TAP_MAX_DURATION
+        ) {
+          raycastTap(e.clientX, e.clientY);
+        }
       }
     };
 
@@ -95,6 +114,12 @@ export function TouchControls() {
           if (lookPointer.current !== null) return;
           lookPointer.current = e.pointerId;
           lookLast.current = { x: e.clientX, y: e.clientY };
+          lookStart.current = {
+            x: e.clientX,
+            y: e.clientY,
+            time: performance.now(),
+            moved: 0,
+          };
         }}
       />
     </>

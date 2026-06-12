@@ -24,9 +24,10 @@ export function usePointerLock() {
       if (document.pointerLockElement) {
         setViewMode("walking");
       } else {
-        // Browser released the lock (ESC or focus loss)
+        // Browser released the lock (ESC or focus loss). When we unlocked
+        // intentionally to inspect an artwork, stay in inspect mode.
         resetInput();
-        setViewMode("menu");
+        if (useStore.getState().viewMode === "walking") setViewMode("menu");
       }
     };
     const onError = () => {

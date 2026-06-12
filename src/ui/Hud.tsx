@@ -5,6 +5,9 @@ import styles from "./Hud.module.css";
 
 export function Hud() {
   const viewMode = useStore((s) => s.viewMode);
+  const hoveredTitle = useStore((s) =>
+    s.hoveredArtwork ? (s.artworkData[s.hoveredArtwork]?.data?.title ?? null) : null,
+  );
   const { enter, exit } = usePointerLock();
   const touch = isTouchDevice();
 
@@ -25,9 +28,17 @@ export function Hud() {
     );
   }
 
+  if (viewMode === "inspecting") return null;
+
   return (
     <>
-      {!touch && <div className={styles.crosshair} />}
+      {!touch && (
+        <div
+          className={styles.crosshair}
+          data-hovered={hoveredTitle !== null}
+        />
+      )}
+      {hoveredTitle && <div className={styles.tooltip}>{hoveredTitle}</div>}
       {touch && (
         <button
           className={styles.exitButton}

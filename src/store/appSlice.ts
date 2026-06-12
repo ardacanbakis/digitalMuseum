@@ -1,7 +1,7 @@
 import type { StateCreator } from "zustand";
 
-/** "inspecting" joins in Phase 3 when artwork focus exists. */
-export type ViewMode = "menu" | "walking";
+/** "menu" = overlay shown, "walking" = first-person, "inspecting" = artwork focus. */
+export type ViewMode = "menu" | "walking" | "inspecting";
 
 export type QualityPreset = "high" | "low";
 
@@ -22,7 +22,7 @@ export const createAppSlice: StateCreator<AppSlice, [], [], AppSlice> = (
   set,
 ) => ({
   viewMode: "menu",
-  currentRoom: "graybox",
+  currentRoom: "impressionism",
   settings: { quality: "high" },
   setViewMode: (mode) => set({ viewMode: mode }),
   setCurrentRoom: (roomId) => set({ currentRoom: roomId }),

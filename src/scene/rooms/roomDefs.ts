@@ -1,3 +1,5 @@
+import type { RoomId } from "../../data/types";
+
 /** Axis-aligned bounding box in the XZ plane (walls span full room height). */
 export interface AABB {
   minX: number;
@@ -14,7 +16,7 @@ export interface Obstacle {
 }
 
 export interface RoomDef {
-  id: string;
+  id: RoomId;
   name: string;
   /** Inner footprint, centered on origin offset. */
   width: number; // X extent
@@ -63,31 +65,28 @@ function makeRoom(
   };
 }
 
-/** Phase 1 gray-box room. Real gallery rooms replace this in Phase 4. */
-export const grayBoxRoom: RoomDef = makeRoom({
-  id: "graybox",
-  name: "Gray Box",
-  width: 12,
-  depth: 8,
-  height: 4,
+/** Impressionism hall, sized so ~32 works hang comfortably. The full
+ * multi-room floor plan arrives in Phase 4. */
+export const impressionismRoom: RoomDef = makeRoom({
+  id: "impressionism",
+  name: "Impressionism & Post-Impressionism",
+  width: 26,
+  depth: 16,
+  height: 5,
   center: [0, 0],
   wallThickness: 0.3,
-  spawn: [0, 2.5],
+  spawn: [0, 4],
   obstacles: [
+    // central visitor benches
     {
-      aabb: { minX: -3.5, maxX: -2.5, minZ: -1.5, maxZ: -0.5 },
-      height: 1.1,
-      color: "#b0413e",
+      aabb: { minX: -5, maxX: -3, minZ: -0.4, maxZ: 0.4 },
+      height: 0.45,
+      color: "#4a3a2c",
     },
     {
-      aabb: { minX: 2.6, maxX: 3.4, minZ: -2.2, maxZ: -1.4 },
-      height: 1.4,
-      color: "#3e6990",
-    },
-    {
-      aabb: { minX: 0.4, maxX: 1.6, minZ: 1.2, maxZ: 1.8 },
-      height: 0.5,
-      color: "#7a8c4f",
+      aabb: { minX: 3, maxX: 5, minZ: -0.4, maxZ: 0.4 },
+      height: 0.45,
+      color: "#4a3a2c",
     },
   ],
 });
