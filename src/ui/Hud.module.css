@@ -1,0 +1,77 @@
+.menu {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(14, 11, 8, 0.72);
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+  text-align: center;
+  padding: 24px;
+}
+
+.title {
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #f0e9dd;
+}
+
+.subtitle {
+  color: #b8ab97;
+  font-size: 1rem;
+}
+
+.enterButton {
+  margin-top: 18px;
+  padding: 14px 42px;
+  font-size: 1.1rem;
+  font-family: inherit;
+  color: #1c150e;
+  background: #d4af37;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.enterButton:hover {
+  background: #e7c64f;
+  transform: translateY(-1px);
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #8d8170;
+}
+
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: rgba(240, 233, 221, 0.85);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.exitButton {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 233, 221, 0.4);
+  background: rgba(20, 16, 12, 0.55);
+  color: #f0e9dd;
+  font-size: 1rem;
+  pointer-events: auto;
+  cursor: pointer;
+}

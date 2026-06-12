@@ -1,0 +1,42 @@
+.joystickZone {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 45%;
+  height: 55%;
+  pointer-events: auto;
+  touch-action: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 0 0 max(28px, env(safe-area-inset-bottom)) 28px;
+}
+
+.lookZone {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 55%;
+  height: 100%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.joystickBase {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 2px solid rgba(240, 233, 221, 0.35);
+  background: rgba(20, 16, 12, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.joystickKnob {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(240, 233, 221, 0.55);
+  will-change: transform;
+}
