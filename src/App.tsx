@@ -3,10 +3,14 @@ import { Stats } from "@react-three/drei";
 import { Scene } from "./scene/Scene";
 import { setLockElement } from "./scene/player/usePointerLock";
 import { EYE_HEIGHT } from "./scene/player/collision";
+import { DebugPage } from "./ui/DebugPage";
 import { Hud } from "./ui/Hud";
 import { TouchControls } from "./ui/TouchControls";
 
+const isDebug = new URLSearchParams(window.location.search).has("debug");
+
 export default function App() {
+  if (isDebug) return <DebugPage />;
   return (
     <div className="app">
       <Canvas
