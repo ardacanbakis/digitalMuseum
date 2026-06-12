@@ -8,6 +8,7 @@ import { DebugPage } from "./ui/DebugPage";
 import { Hud } from "./ui/Hud";
 import { InfoPanel } from "./ui/InfoPanel";
 import { MapOverlay } from "./ui/MapOverlay";
+import { MusicPlayer } from "./ui/MusicPlayer";
 import { TouchControls } from "./ui/TouchControls";
 
 const isDebug = new URLSearchParams(window.location.search).has("debug");
@@ -29,6 +30,7 @@ export default function App() {
         <TouchControls />
         <InfoPanel />
         <MapOverlay />
+        <MusicPlayer />
       </div>
     </div>
   );

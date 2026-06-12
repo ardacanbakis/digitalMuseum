@@ -2,6 +2,7 @@ import { Artworks } from "./artworks/Artworks";
 import { InteractionManager } from "./artworks/InteractionManager";
 import { Lighting } from "./Lighting";
 import { Player } from "./player/Player";
+import { Props } from "./Props";
 import { allRooms } from "./rooms/roomDefs";
 import { DoorLabels } from "./rooms/DoorLabels";
 import { RoomShell } from "./rooms/RoomShell";
@@ -20,6 +21,7 @@ export function Scene() {
           <Artworks key={room.id} room={room} />
         ))}
       <DoorLabels />
+      <Props />
       <RoomTracker />
       <InteractionManager />
       <Player />

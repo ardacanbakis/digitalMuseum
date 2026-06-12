@@ -94,7 +94,12 @@ export function Painting({
       position={placement.position}
       rotation-y={placement.rotationY}
     >
-      <Frame width={width} height={height} hovered={hovered} />
+      <Frame
+        width={width}
+        height={height}
+        hovered={hovered}
+        room={entry.room}
+      />
       <mesh
         ref={canvasRef}
         position-z={0.04}

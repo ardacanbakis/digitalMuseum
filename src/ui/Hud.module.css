@@ -25,6 +25,23 @@
   font-size: 1rem;
 }
 
+.enterRow {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.enterMuted {
+  background: transparent;
+  border: 1px solid #d4af37 !important;
+  color: #d4af37 !important;
+}
+
+.enterMuted:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+}
+
 .enterButton {
   margin-top: 18px;
   padding: 14px 42px;

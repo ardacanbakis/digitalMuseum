@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
+import { nextTrack, startMusic, togglePlay } from "../audio/musicEngine";
 import { closeInspect } from "../scene/artworks/interaction";
 import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
 import { isTouchDevice } from "../scene/player/input";
@@ -15,6 +16,7 @@ const KEYBINDINGS: [keys: string, action: string][] = [
   ["Scroll wheel", "Zoom while inspecting"],
   ["Click + drag", "Pan across the painting when zoomed"],
   ["M", "Museum map & teleport"],
+  ["N / P", "Next track / play-pause music"],
   ["ESC / click away", "Put the painting back"],
   ["ESC (walking)", "Open & close this menu"],
 ];
@@ -52,6 +54,18 @@ export function Hud() {
         toggleMap();
         return;
       }
+      if (useStore.getState().viewMode !== "menu" && !e.repeat) {
+        if (e.code === "KeyN") {
+          nextTrack();
+          useStore.getState().setPlayerExpanded(true);
+          return;
+        }
+        if (e.code === "KeyP") {
+          togglePlay();
+          useStore.getState().setPlayerExpanded(true);
+          return;
+        }
+      }
       if (e.key !== "Escape") return;
       const state = useStore.getState();
       if (state.viewMode === "inspecting") closeInspect();
@@ -65,13 +79,37 @@ export function Hud() {
   }, [touch, enter]);
 
   if (viewMode === "menu") {
+    const firstVisit = !useStore.getState().musicStarted;
     return (
-      <div className={styles.menu} onClick={enter}>
+      <div className={styles.menu} onClick={firstVisit ? undefined : enter}>
         <h1 className={styles.title}>Digital Museum</h1>
         <p className={styles.subtitle}>A walkable gallery of canonical art</p>
-        <button className={styles.enterButton} onClick={enter}>
-          Enter Museum
-        </button>
+        {firstVisit ? (
+          <div className={styles.enterRow}>
+            <button
+              className={styles.enterButton}
+              onClick={() => {
+                startMusic(true);
+                enter();
+              }}
+            >
+              Enter with sound
+            </button>
+            <button
+              className={`${styles.enterButton} ${styles.enterMuted}`}
+              onClick={() => {
+                startMusic(false);
+                enter();
+              }}
+            >
+              Enter muted
+            </button>
+          </div>
+        ) : (
+          <button className={styles.enterButton} onClick={enter}>
+            Return to Museum
+          </button>
+        )}
         {touch ? (
           <p className={styles.hint}>
             Left side: joystick to walk · Right side: drag to look, tap a
@@ -90,7 +128,11 @@ export function Hud() {
                 </div>
               ))}
             </div>
-            <p className={styles.hint}>Click anywhere or press ESC to enter</p>
+            {!firstVisit && (
+              <p className={styles.hint}>
+                Click anywhere or press ESC to enter
+              </p>
+            )}
           </>
         )}
         <button
