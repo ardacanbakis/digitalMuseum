@@ -7,9 +7,13 @@ import styles from "./Hud.module.css";
 const KEYBINDINGS: [keys: string, action: string][] = [
   ["W A S D / ↑←↓→", "Move"],
   ["Q / E", "Strafe left / right"],
+  ["Shift (hold)", "Run"],
   ["Mouse", "Look around"],
   ["Click", "Inspect artwork"],
-  ["ESC", "Leave artwork / open & close this menu"],
+  ["← → / Q E", "Browse paintings while inspecting"],
+  ["Scroll wheel", "Zoom while inspecting"],
+  ["ESC / click away", "Put the painting back"],
+  ["ESC (walking)", "Open & close this menu"],
 ];
 
 export function Hud() {

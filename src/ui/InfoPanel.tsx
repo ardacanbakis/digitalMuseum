@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { commonsFilePageUrl } from "../api/commons";
-import { isTouchDevice } from "../scene/player/input";
-import { usePointerLock } from "../scene/player/usePointerLock";
+import { closeInspect } from "../scene/artworks/interaction";
 import { useStore } from "../store";
 import styles from "./InfoPanel.module.css";
 
@@ -10,26 +9,14 @@ export function InfoPanel() {
   const record = useStore((s) =>
     s.selectedArtwork ? s.artworkData[s.selectedArtwork] : undefined,
   );
-  const setSelectedArtwork = useStore((s) => s.setSelectedArtwork);
-  const setViewMode = useStore((s) => s.setViewMode);
-  const { enter } = usePointerLock();
-
-  const close = () => {
-    setSelectedArtwork(null);
-    setViewMode("walking");
-    // Desktop: relock the pointer to resume walking; if the browser
-    // refuses (lock cooldown), usePointerLock falls back to the menu.
-    if (!isTouchDevice()) enter();
-  };
 
   useEffect(() => {
     if (!selectedId) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") closeInspect();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
 
   if (!selectedId) return null;
@@ -51,7 +38,11 @@ export function InfoPanel() {
 
   return (
     <aside className={styles.panel}>
-      <button className={styles.close} onClick={close} aria-label="Close">
+      <button
+        className={styles.close}
+        onClick={() => closeInspect()}
+        aria-label="Close"
+      >
         ✕
       </button>
       <div className={styles.body}>
@@ -91,7 +82,10 @@ export function InfoPanel() {
             )}
           </span>
         </footer>
-        <p className={styles.hint}>ESC or ✕ to return it to the wall</p>
+        <p className={styles.hint}>
+          ← → browse the room · scroll to zoom · ESC or click away to return
+          it to the wall
+        </p>
       </div>
     </aside>
   );

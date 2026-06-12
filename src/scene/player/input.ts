@@ -8,6 +8,7 @@ export const input = {
     back: false,
     left: false,
     right: false,
+    run: false,
   },
   /** Normalized joystick vector, x: strafe right, y: forward. */
   joystick: { x: 0, y: 0 },
@@ -20,6 +21,7 @@ export function resetInput() {
   input.keys.back = false;
   input.keys.left = false;
   input.keys.right = false;
+  input.keys.run = false;
   input.joystick.x = 0;
   input.joystick.y = 0;
   input.lookDelta.x = 0;

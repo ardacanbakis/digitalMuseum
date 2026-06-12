@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Stats } from "@react-three/drei";
 import { Scene } from "./scene/Scene";
+import { closeInspect } from "./scene/artworks/interaction";
 import { setLockElement } from "./scene/player/usePointerLock";
 import { EYE_HEIGHT } from "./scene/player/collision";
 import { DebugPage } from "./ui/DebugPage";
@@ -17,6 +18,7 @@ export default function App() {
       <Canvas
         camera={{ fov: 70, near: 0.1, far: 100, position: [0, EYE_HEIGHT, 2.5] }}
         onCreated={({ gl }) => setLockElement(gl.domElement)}
+        onPointerMissed={() => closeInspect()}
       >
         <Scene />
         {import.meta.env.DEV && <Stats />}

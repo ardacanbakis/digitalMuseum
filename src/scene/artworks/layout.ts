@@ -26,8 +26,12 @@ interface WallSpec {
   rotationY: number;
   length: number;
   center: number;
+  /** Traverse the wall backwards so slot order runs clockwise around the room. */
+  reverse: boolean;
 }
 
+/** Walls in clockwise perimeter order (N→E→S→W), so that "next painting"
+ * navigation in inspect mode walks naturally around the room. */
 function wallSpecs(room: RoomDef): WallSpec[] {
   const [cx, cz] = room.center;
   const hw = room.width / 2;
@@ -35,10 +39,10 @@ function wallSpecs(room: RoomDef): WallSpec[] {
   const lengthX = room.width - WALL_MARGIN * 2;
   const lengthZ = room.depth - WALL_MARGIN * 2;
   return [
-    { axis: "x", fixed: cz - hd, normal: [0, 1], rotationY: 0, length: lengthX, center: cx },
-    { axis: "x", fixed: cz + hd, normal: [0, -1], rotationY: Math.PI, length: lengthX, center: cx },
-    { axis: "z", fixed: cx - hw, normal: [1, 0], rotationY: Math.PI / 2, length: lengthZ, center: cz },
-    { axis: "z", fixed: cx + hw, normal: [-1, 0], rotationY: -Math.PI / 2, length: lengthZ, center: cz },
+    { axis: "x", fixed: cz - hd, normal: [0, 1], rotationY: 0, length: lengthX, center: cx, reverse: false },
+    { axis: "z", fixed: cx + hw, normal: [-1, 0], rotationY: -Math.PI / 2, length: lengthZ, center: cz, reverse: false },
+    { axis: "x", fixed: cz + hd, normal: [0, -1], rotationY: Math.PI, length: lengthX, center: cx, reverse: true },
+    { axis: "z", fixed: cx - hw, normal: [1, 0], rotationY: Math.PI / 2, length: lengthZ, center: cz, reverse: true },
   ];
 }
 
@@ -73,7 +77,10 @@ function computePlacements(room: RoomDef): Map<string, Placement> {
     if (count === 0) return;
     const spacing = wall.length / count;
     for (let s = 0; s < count && i < entries.length; s++, i++) {
-      const t = wall.center - wall.length / 2 + spacing * (s + 0.5);
+      const offset = spacing * (s + 0.5);
+      const t = wall.reverse
+        ? wall.center + wall.length / 2 - offset
+        : wall.center - wall.length / 2 + offset;
       const x =
         wall.axis === "x" ? t : wall.fixed + wall.normal[0] * WALL_OFFSET;
       const z =
@@ -100,6 +107,11 @@ export function getRoomPlacements(room: RoomDef): Map<string, Placement> {
     placementCache.set(room.id, placements);
   }
   return placements;
+}
+
+/** Artwork ids in clockwise hanging order — the inspect-mode browse order. */
+export function getRoomArtworkOrder(room: RoomDef): string[] {
+  return [...getRoomPlacements(room).keys()];
 }
 
 export interface FocusPose {

@@ -12,6 +12,8 @@ const KEY_MAP: Record<string, keyof typeof input.keys> = {
   KeyD: "right",
   KeyE: "right",
   ArrowRight: "right",
+  ShiftLeft: "run",
+  ShiftRight: "run",
 };
 
 export function useKeyboardControls() {

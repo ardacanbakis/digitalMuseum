@@ -10,9 +10,29 @@ export function setLockElement(el: HTMLElement) {
 }
 
 /**
+ * Request pointer lock. The promise rejects during Chrome's ~1.3s
+ * cooldown after an ESC unlock, or without a qualifying user gesture —
+ * callers decide what failure means (menu fallback vs. stay put).
+ */
+export function requestLock(onFail?: () => void): void {
+  if (!lockElement) {
+    onFail?.();
+    return;
+  }
+  const result = lockElement.requestPointerLock() as unknown;
+  if (result instanceof Promise) {
+    result.catch(() => onFail?.());
+  }
+}
+
+/**
  * Syncs the browser pointer-lock state with viewMode and exposes
  * enter()/exit(). On touch devices there is no pointer lock — entering
  * simply switches to walking mode.
+ *
+ * Mounted once (by the Hud); also installs a click-to-relock handler so
+ * that if a silent relock after closing an artwork fails, the next click
+ * on the scene resumes mouse-look without bouncing through the menu.
  */
 export function usePointerLock() {
   const setViewMode = useStore((s) => s.setViewMode);
@@ -32,14 +52,26 @@ export function usePointerLock() {
     };
     const onError = () => {
       resetInput();
-      setViewMode("menu");
+      if (useStore.getState().viewMode === "menu") return;
+      if (useStore.getState().viewMode === "walking") setViewMode("menu");
+    };
+    const onClick = (e: MouseEvent) => {
+      if (
+        useStore.getState().viewMode === "walking" &&
+        !document.pointerLockElement &&
+        e.target instanceof HTMLCanvasElement
+      ) {
+        requestLock();
+      }
     };
 
     document.addEventListener("pointerlockchange", onChange);
     document.addEventListener("pointerlockerror", onError);
+    document.addEventListener("click", onClick);
     return () => {
       document.removeEventListener("pointerlockchange", onChange);
       document.removeEventListener("pointerlockerror", onError);
+      document.removeEventListener("click", onClick);
     };
   }, [setViewMode]);
 
@@ -48,12 +80,7 @@ export function usePointerLock() {
       setViewMode("walking");
       return;
     }
-    // requestPointerLock returns a promise in modern browsers; it rejects
-    // during Chrome's ~1s cooldown after ESC — stay on the menu in that case.
-    const result = lockElement?.requestPointerLock() as unknown;
-    if (result instanceof Promise) {
-      result.catch(() => setViewMode("menu"));
-    }
+    requestLock(() => setViewMode("menu"));
   }, [setViewMode]);
 
   const exit = useCallback(() => {

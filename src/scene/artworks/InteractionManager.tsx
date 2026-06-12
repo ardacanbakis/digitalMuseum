@@ -4,6 +4,7 @@ import { Raycaster, Vector2 } from "three";
 import { useStore } from "../../store";
 import {
   interactiveMeshes,
+  navigateArtwork,
   selectArtwork,
   setTapRaycaster,
 } from "./interaction";
@@ -44,6 +45,19 @@ export function InteractionManager() {
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
+  }, []);
+
+  // Browse neighboring paintings with ←/→ (or Q/E, A/D) while inspecting
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat || useStore.getState().viewMode !== "inspecting") return;
+      if (["ArrowRight", "KeyE", "KeyD"].includes(e.code)) navigateArtwork(1);
+      else if (["ArrowLeft", "KeyQ", "KeyA"].includes(e.code)) {
+        navigateArtwork(-1);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   useEffect(() => {

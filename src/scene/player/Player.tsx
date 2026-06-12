@@ -8,7 +8,7 @@ import {
   paintingSize,
 } from "../artworks/layout";
 import type { RoomDef } from "../rooms/roomDefs";
-import { EYE_HEIGHT, WALK_SPEED, resolveMovement } from "./collision";
+import { EYE_HEIGHT, RUN_SPEED, WALK_SPEED, resolveMovement } from "./collision";
 import { input } from "./input";
 import { useKeyboardControls } from "./useKeyboardControls";
 
@@ -19,10 +19,15 @@ const MAX_DELTA = 0.05; // clamp dt so tab-switches can't tunnel through walls
 const FOCUS_DAMPING = 4; // camera glide speed toward a focused artwork
 
 const UP = new Vector3(0, 1, 0);
+const ZOOM_MIN = 0.6;
+const ZOOM_MAX = 1.8;
+const ZOOM_STEP = 1.12;
+const ZOOM_SCRATCH = new Vector3();
 
 interface FocusTarget {
   id: string;
   position: Vector3;
+  lookTarget: Vector3;
   quaternion: Quaternion;
 }
 
@@ -55,6 +60,24 @@ export function Player({ room }: { room: RoomDef }) {
 
   const focusRef = useRef<FocusTarget | null>(null);
   const wasInspecting = useRef(false);
+  const zoomRef = useRef(1);
+  const gl = useThree((s) => s.gl);
+
+  // Mouse-wheel zoom while inspecting (canvas only, so the info panel
+  // still scrolls normally)
+  useEffect(() => {
+    const el = gl.domElement;
+    const onWheel = (e: WheelEvent) => {
+      if (useStore.getState().viewMode !== "inspecting") return;
+      const factor = e.deltaY > 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+      zoomRef.current = Math.min(
+        ZOOM_MAX,
+        Math.max(ZOOM_MIN, zoomRef.current * factor),
+      );
+    };
+    el.addEventListener("wheel", onWheel, { passive: true });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [gl]);
 
   useFrame((_, delta) => {
     const store = useStore.getState();
@@ -79,14 +102,21 @@ export function Player({ room }: { room: RoomDef }) {
           focusRef.current = {
             id: store.selectedArtwork,
             position,
+            lookTarget: new Vector3(...pose.lookTarget),
             quaternion,
           };
+          zoomRef.current = 1;
         }
       }
       const focus = focusRef.current;
       if (focus) {
+        // Zoom scales the camera's distance from the painting
+        const target = ZOOM_SCRATCH.copy(focus.position)
+          .sub(focus.lookTarget)
+          .multiplyScalar(zoomRef.current)
+          .add(focus.lookTarget);
         const k = 1 - Math.exp(-FOCUS_DAMPING * dt);
-        camera.position.lerp(focus.position, k);
+        camera.position.lerp(target, k);
         camera.quaternion.slerp(focus.quaternion, k);
       }
       wasInspecting.current = true;
@@ -134,10 +164,11 @@ export function Player({ room }: { room: RoomDef }) {
     }
 
     // Camera-relative, ground-plane directions (yaw only, ignore pitch)
+    const speed = input.keys.run ? RUN_SPEED : WALK_SPEED;
     const sin = Math.sin(yaw.current);
     const cos = Math.cos(yaw.current);
-    const dx = (-sin * forward + cos * strafe) * WALK_SPEED * dt;
-    const dz = (-cos * forward - sin * strafe) * WALK_SPEED * dt;
+    const dx = (-sin * forward + cos * strafe) * speed * dt;
+    const dz = (-cos * forward - sin * strafe) * speed * dt;
 
     const [nx, nz] = resolveMovement(
       camera.position.x,

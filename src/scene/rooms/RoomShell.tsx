@@ -1,3 +1,5 @@
+import { closeInspect } from "../artworks/interaction";
+import { useStore } from "../../store";
 import type { AABB, RoomDef } from "./roomDefs";
 
 function boxFromAABB(aabb: AABB, height: number, y = height / 2) {
@@ -21,7 +23,19 @@ export function RoomShell({ room }: { room: RoomDef }) {
   const walls = room.colliders.slice(0, wallCount);
 
   return (
-    <group>
+    <group
+      onClick={() => {
+        // Clicking anywhere on the room (not a painting) while inspecting
+        // puts the painting back; paintings stopPropagation so this never
+        // fires for clicks on them.
+        if (
+          !document.pointerLockElement &&
+          useStore.getState().viewMode === "inspecting"
+        ) {
+          closeInspect();
+        }
+      }}
+    >
       {/* floor */}
       <mesh rotation-x={-Math.PI / 2} position={[cx, 0, cz]}>
         <planeGeometry
