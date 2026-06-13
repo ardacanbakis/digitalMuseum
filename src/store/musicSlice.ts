@@ -7,14 +7,11 @@ export interface MusicSlice {
   isPlaying: boolean;
   musicVolume: number; // 0..1 master, before ducking
   muted: boolean;
-  /** Pill expanded vs. collapsed note icon. */
-  playerExpanded: boolean;
   setTrackIndex: (i: number) => void;
   setMusicStarted: (v: boolean) => void;
   setIsPlaying: (v: boolean) => void;
   setMusicVolume: (v: number) => void;
   setMuted: (v: boolean) => void;
-  setPlayerExpanded: (v: boolean) => void;
 }
 
 export const createMusicSlice: StateCreator<MusicSlice, [], [], MusicSlice> = (
@@ -25,11 +22,9 @@ export const createMusicSlice: StateCreator<MusicSlice, [], [], MusicSlice> = (
   isPlaying: false,
   musicVolume: 0.7,
   muted: false,
-  playerExpanded: false,
   setTrackIndex: (i) => set({ trackIndex: i }),
   setMusicStarted: (v) => set({ musicStarted: v }),
   setIsPlaying: (v) => set({ isPlaying: v }),
   setMusicVolume: (v) => set({ musicVolume: v }),
   setMuted: (v) => set({ muted: v }),
-  setPlayerExpanded: (v) => set({ playerExpanded: v }),
 });

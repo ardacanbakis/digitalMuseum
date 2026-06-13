@@ -8,10 +8,11 @@ import { DebugPage } from "./ui/DebugPage";
 import { Hud } from "./ui/Hud";
 import { InfoPanel } from "./ui/InfoPanel";
 import { MapOverlay } from "./ui/MapOverlay";
-import { MusicPlayer } from "./ui/MusicPlayer";
 import { TouchControls } from "./ui/TouchControls";
 
-const isDebug = new URLSearchParams(window.location.search).has("debug");
+const params = new URLSearchParams(window.location.search);
+const isDebug = params.has("debug");
+const showStats = params.has("stats"); // FPS/ms meter hidden unless ?stats
 
 export default function App() {
   if (isDebug) return <DebugPage />;
@@ -23,14 +24,13 @@ export default function App() {
         onPointerMissed={() => closeInspect()}
       >
         <Scene />
-        {import.meta.env.DEV && <Stats />}
+        {showStats && <Stats />}
       </Canvas>
       <div className="overlay">
         <Hud />
         <TouchControls />
         <InfoPanel />
         <MapOverlay />
-        <MusicPlayer />
       </div>
     </div>
   );

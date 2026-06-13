@@ -24,6 +24,52 @@
   }
 }
 
+.navArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 233, 221, 0.35);
+  background: rgba(20, 16, 12, 0.5);
+  color: #f0e9dd;
+  font-size: 1.8rem;
+  line-height: 1;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.navArrow:hover {
+  background: rgba(212, 175, 55, 0.85);
+  color: #1c150e;
+}
+
+.navPrev {
+  left: 24px;
+}
+
+/* sit clear of the 380px info panel on the right */
+.navNext {
+  right: 404px;
+}
+
+@media (max-width: 640px) {
+  .navArrow {
+    top: 28%;
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+  }
+  .navNext {
+    right: 16px;
+  }
+}
+
 .close {
   position: absolute;
   top: 12px;

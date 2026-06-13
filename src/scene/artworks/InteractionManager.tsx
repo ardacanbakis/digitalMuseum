@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Raycaster, Vector2 } from "three";
 import { useStore } from "../../store";
 import {
+  closeInspect,
   interactiveMeshes,
   navigateArtwork,
   selectArtwork,
@@ -47,17 +48,28 @@ export function InteractionManager() {
     return () => document.removeEventListener("click", onClick);
   }, []);
 
-  // Browse neighboring paintings with ←/→ (or Q/E, A/D) while inspecting
+  // While inspecting: ←/→ (or Q/E, A/D) browse the room; Space puts the
+  // painting back; a double-click anywhere also closes the focus.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.repeat || useStore.getState().viewMode !== "inspecting") return;
       if (["ArrowRight", "KeyE", "KeyD"].includes(e.code)) navigateArtwork(1);
       else if (["ArrowLeft", "KeyQ", "KeyA"].includes(e.code)) {
         navigateArtwork(-1);
+      } else if (e.code === "Space") {
+        e.preventDefault();
+        closeInspect();
       }
     };
+    const onDblClick = () => {
+      if (useStore.getState().viewMode === "inspecting") closeInspect();
+    };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("dblclick", onDblClick);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("dblclick", onDblClick);
+    };
   }, []);
 
   useEffect(() => {

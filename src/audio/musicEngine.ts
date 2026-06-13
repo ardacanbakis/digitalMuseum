@@ -108,8 +108,6 @@ function loadInto(deck: Deck, playlistIndex: number, play: boolean) {
   deck.el.src = trackUrl(track);
   const store = useStore.getState();
   store.setTrackIndex(playlistIndex);
-  // Surface the new track briefly in the player UI
-  store.setPlayerExpanded(true);
   if (play) {
     void deck.el.play().catch(() => {
       // Autoplay refused (no gesture yet) — stay paused
@@ -155,6 +153,25 @@ export function nextTrack(): void {
 
 export function prevTrack(): void {
   changeTrack(-1);
+}
+
+/** Jump straight to a specific playlist entry (from the browse list). */
+export function playTrack(playlistIndex: number): void {
+  if (!useStore.getState().musicStarted) startMusic(true);
+  if (!decks || order.length === 0) return;
+  const pos = order.indexOf(playlistIndex);
+  if (pos !== -1) orderPos = pos;
+  const store = useStore.getState();
+  if (store.muted) store.setMuted(false);
+  if (store.isPlaying) {
+    const other = decks[1 - activeIdx];
+    other.gain = Math.max(other.gain, 0.001);
+    loadInto(other, playlistIndex, true);
+  } else {
+    store.setIsPlaying(true);
+    loadInto(decks[activeIdx], playlistIndex, true);
+  }
+  applyVolumes();
 }
 
 export function togglePlay(): void {

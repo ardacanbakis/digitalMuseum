@@ -119,6 +119,110 @@ export const playlist: Track[] = [
     filename: "Tchaikovsky the Seasons June.ogg",
     license: "CC BY-SA 2.0 DE",
   },
+  {
+    composer: "Erik Satie",
+    title: "Gnossienne No. 1",
+    filename: "Erik Satie - Gnossienne no 1.ogg",
+    license: "Free license (Commons)",
+  },
+  {
+    composer: "Claude Debussy",
+    title: "Rêverie",
+    filename: "Reverie.ogg",
+    license: "Free license (Commons)",
+  },
+  {
+    composer: "Frédéric Chopin",
+    title: "Fantaisie-Impromptu, Op. 66",
+    filename: "Chopin Fantasie-Impromptu(Op.66).oga",
+    license: "Free license (Commons)",
+  },
+  {
+    composer: "Edvard Grieg",
+    title: "Morning Mood (Peer Gynt)",
+    performer: "Musopen",
+    filename: "Musopen - Morning.ogg",
+    license: "Public domain (Musopen)",
+  },
+  {
+    composer: "Edvard Grieg",
+    title: "In the Hall of the Mountain King",
+    performer: "Czech National Symphony Orchestra / Musopen",
+    filename: "Musopen - In the Hall Of The Mountain King.ogg",
+    license: "Public domain (Musopen)",
+  },
+  {
+    composer: "Antonín Dvořák",
+    title: "Symphony No. 9 “New World”, II. Largo",
+    performer: "Musopen",
+    filename:
+      "Antonin Dvorak - symphony no. 9 in e minor 'from the new world', op. 95 - ii. largo.ogg",
+    license: "Public domain (Musopen)",
+  },
+  {
+    composer: "Johannes Brahms",
+    title: "Hungarian Dance No. 5",
+    filename: "Johannes Brahms - Ungarischer Tanz 5 g-moll.ogg",
+    license: "Free license (Commons)",
+  },
+  {
+    composer: "Antonio Vivaldi",
+    title: "The Four Seasons — Winter, II. Largo",
+    performer: "John Harrison",
+    filename: "11 - Vivaldi Winter mvt 2 Largo - John Harrison violin.ogg",
+    license: "Creative Commons",
+  },
+  {
+    composer: "G. F. Handel",
+    title: "Sarabande (Suite in D minor, HWV 437)",
+    filename:
+      "Handel - Suite Vol. 2 No. 4 in D minor HWV 437 - 4. Sarabande.oga",
+    license: "Free license (Commons)",
+  },
+  {
+    composer: "Franz Schubert",
+    title: "Ave Maria",
+    filename: "Free Tim - Schuberts Ave Maria.ogg",
+    license: "Free license (Commons)",
+  },
+  {
+    composer: "Tomaso Albinoni",
+    title: "Adagio in G minor",
+    performer: "David Hernando Vitores",
+    filename:
+      "Tomaso Giovanni Albinoni - Adagio in G minor - Arr for alto saxophone and piano - David Hernando Vitores.ogg",
+    license: "Creative Commons",
+  },
+  {
+    composer: "P. I. Tchaikovsky",
+    title: "Dance of the Sugar Plum Fairy",
+    filename:
+      "Tchaikovsky - Dance of the Sugar Plum Fairy - The Nutcracker.ogg",
+    license: "CC BY 3.0",
+  },
+  {
+    composer: "Felix Mendelssohn",
+    title: "Spring Song, Op. 62 No. 6",
+    performer: "ROSA Pianist",
+    filename:
+      "ROSA Pianist - Mendelssohn's Songs Without Words, Book 5, Op 62, No. 6, Allegretto grazioso (Spring Song), MWV U 161.ogg",
+    license: "Creative Commons",
+  },
+  {
+    composer: "Modest Mussorgsky",
+    title: "Promenade (Pictures at an Exhibition)",
+    filename:
+      "Modest Mussorgsky - pictures at an exhibition - promenade - moderato comodo e con delicatezza.ogg",
+    license: "Free license (Commons)",
+  },
+  {
+    composer: "J. S. Bach",
+    title: "Prelude No. 1 in C major, BWV 846",
+    performer: "Kimiko Ishizaka",
+    filename:
+      "Kimiko Ishizaka - Bach - Well-Tempered Clavier, Book 1 - 01 Prelude No. 1 in C major, BWV 846.ogg",
+    license: "CC0 (Open Well-Tempered Clavier)",
+  },
 ];
 
 export function trackUrl(track: Track): string {

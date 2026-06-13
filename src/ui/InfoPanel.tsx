@@ -1,6 +1,6 @@
 import { commonsFilePageUrl } from "../api/commons";
 import { manifestById } from "../data/manifest";
-import { closeInspect } from "../scene/artworks/interaction";
+import { closeInspect, navigateArtwork } from "../scene/artworks/interaction";
 import { useStore } from "../store";
 import styles from "./InfoPanel.module.css";
 
@@ -29,14 +29,29 @@ export function InfoPanel() {
   ];
 
   return (
-    <aside className={styles.panel}>
+    <>
       <button
-        className={styles.close}
-        onClick={() => closeInspect()}
-        aria-label="Close"
+        className={`${styles.navArrow} ${styles.navPrev}`}
+        onClick={() => navigateArtwork(-1)}
+        aria-label="Previous artwork"
       >
-        ✕
+        ‹
       </button>
+      <button
+        className={`${styles.navArrow} ${styles.navNext}`}
+        onClick={() => navigateArtwork(1)}
+        aria-label="Next artwork"
+      >
+        ›
+      </button>
+      <aside className={styles.panel}>
+        <button
+          className={styles.close}
+          onClick={() => closeInspect()}
+          aria-label="Close"
+        >
+          ✕
+        </button>
       <div className={styles.body}>
         <h2 className={styles.title}>{art?.title ?? "…"}</h2>
         {isSculpture && (
@@ -83,10 +98,11 @@ export function InfoPanel() {
           </span>
         </footer>
         <p className={styles.hint}>
-          ← → browse the room · scroll to zoom · drag to pan · ESC or click
-          away to return it to the wall
+          ← → browse the room · scroll to zoom · drag to pan · ESC, Space, or
+          double-click to return it to the wall
         </p>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

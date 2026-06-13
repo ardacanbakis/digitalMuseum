@@ -36,25 +36,17 @@ export function RoomShell({ room }: { room: RoomDef }) {
         }
       }}
     >
-      {/* floor */}
+      {/* floor — sized to the footprint so adjacent rooms meet edge-to-edge
+          at shared boundaries instead of overlapping (which z-fought and
+          flickered in the doorways) */}
       <mesh rotation-x={-Math.PI / 2} position={[cx, 0, cz]}>
-        <planeGeometry
-          args={[
-            room.width + room.wallThickness * 2,
-            room.depth + room.wallThickness * 2,
-          ]}
-        />
+        <planeGeometry args={[room.width, room.depth]} />
         <meshStandardMaterial color={room.floorColor} />
       </mesh>
 
       {/* ceiling */}
       <mesh rotation-x={Math.PI / 2} position={[cx, room.height, cz]}>
-        <planeGeometry
-          args={[
-            room.width + room.wallThickness * 2,
-            room.depth + room.wallThickness * 2,
-          ]}
-        />
+        <planeGeometry args={[room.width, room.depth]} />
         <meshStandardMaterial color={room.ceilingColor} />
       </mesh>
 

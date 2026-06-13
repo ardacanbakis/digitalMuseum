@@ -4,6 +4,7 @@ import { nextTrack, startMusic, togglePlay } from "../audio/musicEngine";
 import { closeInspect } from "../scene/artworks/interaction";
 import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
 import { isTouchDevice } from "../scene/player/input";
+import { MusicPanel } from "./MusicPanel";
 import styles from "./Hud.module.css";
 
 const KEYBINDINGS: [keys: string, action: string][] = [
@@ -15,10 +16,11 @@ const KEYBINDINGS: [keys: string, action: string][] = [
   ["← → / Q E", "Browse paintings while inspecting"],
   ["Scroll wheel", "Zoom while inspecting"],
   ["Click + drag", "Pan across the painting when zoomed"],
+  ["‹ › on screen", "Browse paintings while inspecting"],
   ["M", "Museum map & teleport"],
   ["N / P", "Next track / play-pause music"],
-  ["ESC / click away", "Put the painting back"],
-  ["ESC (walking)", "Open & close this menu"],
+  ["ESC / Space / dbl-click", "Put the painting back"],
+  ["ESC (walking)", "Open menu (music & controls)"],
 ];
 
 /** Toggle the floor-plan overlay from walking mode (and back). */
@@ -57,12 +59,10 @@ export function Hud() {
       if (useStore.getState().viewMode !== "menu" && !e.repeat) {
         if (e.code === "KeyN") {
           nextTrack();
-          useStore.getState().setPlayerExpanded(true);
           return;
         }
         if (e.code === "KeyP") {
           togglePlay();
-          useStore.getState().setPlayerExpanded(true);
           return;
         }
       }
@@ -135,6 +135,7 @@ export function Hud() {
             )}
           </>
         )}
+        <MusicPanel />
         <button
           className={styles.aboutButton}
           aria-label="About this museum"
