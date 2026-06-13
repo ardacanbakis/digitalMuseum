@@ -84,11 +84,14 @@ function wallRuns(
 ): WallRun[] {
   const hw = width / 2;
   const hd = depth / 2;
+  // Walls grow INWARD from the footprint edge so that adjacent rooms
+  // (era rooms abutting the atrium) sit wall-to-wall at the shared
+  // boundary instead of protruding into — and occluding — each other.
   return [
-    { side: "north", axis: "x", from: cx - hw - t, to: cx + hw + t, crossMin: cz - hd - t, crossMax: cz - hd },
-    { side: "south", axis: "x", from: cx - hw - t, to: cx + hw + t, crossMin: cz + hd, crossMax: cz + hd + t },
-    { side: "west", axis: "z", from: cz - hd, to: cz + hd, crossMin: cx - hw - t, crossMax: cx - hw },
-    { side: "east", axis: "z", from: cz - hd, to: cz + hd, crossMin: cx + hw, crossMax: cx + hw + t },
+    { side: "north", axis: "x", from: cx - hw - t, to: cx + hw + t, crossMin: cz - hd, crossMax: cz - hd + t },
+    { side: "south", axis: "x", from: cx - hw - t, to: cx + hw + t, crossMin: cz + hd - t, crossMax: cz + hd },
+    { side: "west", axis: "z", from: cz - hd, to: cz + hd, crossMin: cx - hw, crossMax: cx - hw + t },
+    { side: "east", axis: "z", from: cz - hd, to: cz + hd, crossMin: cx + hw - t, crossMax: cx + hw },
   ];
 }
 

@@ -140,6 +140,10 @@ function computePlacements(room: RoomDef): Map<string, Placement> {
     paintings.length,
   );
   let i = 0;
+  // Mount in front of the wall's interior face: walls grow inward by
+  // wallThickness from the footprint edge (seg.fixed), so clear that plus
+  // a small air gap. This also keeps paintings off any neighbor's wall.
+  const mount = room.wallThickness + WALL_OFFSET;
   segments.forEach((seg, si) => {
     const count = counts[si];
     if (count === 0) return;
@@ -147,9 +151,9 @@ function computePlacements(room: RoomDef): Map<string, Placement> {
     const spacing = length / count;
     for (let s = 0; s < count && i < paintings.length; s++, i++) {
       const offset = spacing * (s + 0.5);
-      const t = seg.reverse ? seg.end - offset : seg.start + offset;
-      const x = seg.axis === "x" ? t : seg.fixed + seg.normal[0] * WALL_OFFSET;
-      const z = seg.axis === "x" ? seg.fixed + seg.normal[1] * WALL_OFFSET : t;
+      const along = seg.reverse ? seg.end - offset : seg.start + offset;
+      const x = seg.axis === "x" ? along : seg.fixed + seg.normal[0] * mount;
+      const z = seg.axis === "x" ? seg.fixed + seg.normal[1] * mount : along;
       const entry = paintings[i];
       placements.set(entry.wikidataId, {
         artworkId: entry.wikidataId,
