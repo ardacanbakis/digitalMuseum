@@ -17,6 +17,7 @@ const KEYBINDINGS: [keys: string, action: string][] = [
   ["Scroll wheel", "Zoom while inspecting"],
   ["Click + drag", "Pan across the painting when zoomed"],
   ["‹ › on screen", "Browse paintings while inspecting"],
+  ["Ctrl / ⌘ + Space", "Search a painting & teleport"],
   ["M", "Museum map & teleport"],
   ["N / P", "Next track / play-pause music"],
   ["ESC / Space / dbl-click", "Put the painting back"],
@@ -33,6 +34,15 @@ function toggleMap() {
     state.setViewMode("walking");
     if (!isTouchDevice()) requestLock();
   }
+}
+
+/** Open the search palette from walking / inspecting / map. */
+function openSearch() {
+  const state = useStore.getState();
+  if (state.viewMode === "menu" || state.viewMode === "tour") return;
+  state.setSelectedArtwork(null);
+  state.setViewMode("search");
+  if (document.pointerLockElement) document.exitPointerLock();
 }
 
 export function Hud() {
@@ -52,6 +62,11 @@ export function Hud() {
   useEffect(() => {
     if (touch) return;
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && (e.metaKey || e.ctrlKey) && !e.repeat) {
+        e.preventDefault();
+        openSearch();
+        return;
+      }
       if (e.code === "KeyM" && !e.repeat) {
         toggleMap();
         return;
@@ -70,6 +85,10 @@ export function Hud() {
       const state = useStore.getState();
       if (state.viewMode === "inspecting") closeInspect();
       else if (state.viewMode === "map") toggleMap();
+      else if (state.viewMode === "search") {
+        state.setViewMode("walking");
+        if (!touch) requestLock();
+      } else if (state.viewMode === "tour") state.setViewMode("menu");
       else if (document.pointerLockElement) return;
       else if (state.viewMode === "menu") enter();
       else state.setViewMode("menu");
@@ -110,6 +129,16 @@ export function Hud() {
             Return to Museum
           </button>
         )}
+        <button
+          className={styles.tourButton}
+          onClick={(e) => {
+            e.stopPropagation();
+            startMusic(true);
+            useStore.getState().setViewMode("tour");
+          }}
+        >
+          ✦ Take a guided tour
+        </button>
         {touch ? (
           <p className={styles.hint}>
             Left side: joystick to walk · Right side: drag to look, tap a
@@ -178,7 +207,14 @@ export function Hud() {
     );
   }
 
-  if (viewMode === "inspecting" || viewMode === "map") return null;
+  if (
+    viewMode === "inspecting" ||
+    viewMode === "map" ||
+    viewMode === "search" ||
+    viewMode === "tour"
+  ) {
+    return null;
+  }
 
   return (
     <>

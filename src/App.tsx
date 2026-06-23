@@ -8,6 +8,8 @@ import { DebugPage } from "./ui/DebugPage";
 import { Hud } from "./ui/Hud";
 import { InfoPanel } from "./ui/InfoPanel";
 import { MapOverlay } from "./ui/MapOverlay";
+import { SearchOverlay } from "./ui/SearchOverlay";
+import { TourOverlay } from "./ui/TourOverlay";
 import { TouchControls } from "./ui/TouchControls";
 
 const params = new URLSearchParams(window.location.search);
@@ -31,6 +33,8 @@ export default function App() {
         <TouchControls />
         <InfoPanel />
         <MapOverlay />
+        <SearchOverlay />
+        <TourOverlay />
       </div>
     </div>
   );

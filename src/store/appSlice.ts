@@ -2,8 +2,15 @@ import type { StateCreator } from "zustand";
 import type { RoomId } from "../data/types";
 
 /** "menu" = overlay, "walking" = first-person, "inspecting" = artwork
- * focus, "map" = minimap/teleport overlay. */
-export type ViewMode = "menu" | "walking" | "inspecting" | "map";
+ * focus, "map" = minimap/teleport overlay, "search" = search palette,
+ * "tour" = full-screen guided slideshow. */
+export type ViewMode =
+  | "menu"
+  | "walking"
+  | "inspecting"
+  | "map"
+  | "search"
+  | "tour";
 
 export type QualityPreset = "high" | "low";
 

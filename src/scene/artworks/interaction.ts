@@ -4,7 +4,7 @@ import { useStore } from "../../store";
 import { isTouchDevice } from "../player/input";
 import { requestLock } from "../player/usePointerLock";
 import { roomById } from "../rooms/roomDefs";
-import { getRoomArtworkOrder } from "./layout";
+import { getPlacement, getRoomArtworkOrder } from "./layout";
 
 /** Meshes the crosshair/tap raycaster tests against. */
 export const interactiveMeshes: Object3D[] = [];
@@ -56,6 +56,29 @@ export function navigateArtwork(direction: 1 | -1): void {
   store.setSelectedArtwork(
     order[(index + direction + order.length) % order.length],
   );
+}
+
+/**
+ * Drop the player into walking mode standing in front of an artwork,
+ * facing it. Used by the search palette. Pointer relock is left to the
+ * caller (a user gesture closing the overlay).
+ */
+export function teleportToArtwork(artworkId: string): void {
+  const placement = getPlacement(artworkId);
+  const entry = manifestById.get(artworkId);
+  if (!placement || !entry) return;
+  const [px, , pz] = placement.position;
+  const [nx, nz] = placement.normal;
+  const dist = placement.kind === "pedestal" ? 2.4 : 2.9;
+  const store = useStore.getState();
+  store.setSelectedArtwork(null);
+  store.setCurrentRoom(entry.room);
+  store.setViewMode("walking");
+  store.requestTeleport({
+    x: px + nx * dist,
+    z: pz + nz * dist,
+    yaw: Math.atan2(nx, nz), // face toward the artwork
+  });
 }
 
 // Bridge so DOM-side touch handlers (outside the Canvas) can raycast a tap.
