@@ -32,6 +32,13 @@
   justify-content: center;
 }
 
+.tourRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .tourButton {
   margin-top: 14px;
   padding: 9px 22px;

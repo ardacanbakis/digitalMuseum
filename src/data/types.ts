@@ -13,6 +13,9 @@ export interface ArtworkEntry {
   wikidataId: string;
   /** Exact en.wikipedia article title (redirects also resolve). */
   wikipediaTitle: string;
+  /** Display artist/maker — used for grouping and search (always available
+   * offline; fetched data may refine the label shown in the panel). */
+  artist: string;
   type: "painting" | "sculpture";
   room: RoomId;
   /** Optional layout overrides (used from Phase 3 on). */

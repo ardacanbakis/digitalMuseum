@@ -4,7 +4,9 @@ import { nextTrack, startMusic, togglePlay } from "../audio/musicEngine";
 import { closeInspect } from "../scene/artworks/interaction";
 import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
 import { isTouchDevice } from "../scene/player/input";
+import { BrowsePanel } from "./BrowsePanel";
 import { MusicPanel } from "./MusicPanel";
+import { TourSetup } from "./TourSetup";
 import styles from "./Hud.module.css";
 
 const KEYBINDINGS: [keys: string, action: string][] = [
@@ -13,14 +15,12 @@ const KEYBINDINGS: [keys: string, action: string][] = [
   ["Shift (hold)", "Run"],
   ["Mouse", "Look around"],
   ["Click", "Inspect artwork"],
-  ["← → / Q E", "Browse paintings while inspecting"],
-  ["Scroll wheel", "Zoom while inspecting"],
-  ["Click + drag", "Pan across the painting when zoomed"],
-  ["‹ › on screen", "Browse paintings while inspecting"],
-  ["Ctrl / ⌘ + Space", "Search a painting & teleport"],
+  ["‹ › / ← →", "Browse paintings while inspecting"],
+  ["Scroll / drag", "Zoom & pan a focused painting"],
+  ["Space", "Search a painting & teleport"],
   ["M", "Museum map & teleport"],
   ["N / P", "Next track / play-pause music"],
-  ["ESC / Space / dbl-click", "Put the painting back"],
+  ["ESC / dbl-click", "Put the painting back"],
   ["ESC (walking)", "Open menu (music & controls)"],
 ];
 
@@ -53,6 +53,7 @@ export function Hud() {
   const { enter, exit } = usePointerLock();
   const touch = isTouchDevice();
   const [showAbout, setShowAbout] = useState(false);
+  const [panel, setPanel] = useState<null | "tour" | "browse">(null);
 
   // All ESC behavior lives in this one handler so modes never fight:
   // inspecting → put the painting back; map → close map; walking
@@ -62,7 +63,11 @@ export function Hud() {
   useEffect(() => {
     if (touch) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space" && (e.metaKey || e.ctrlKey) && !e.repeat) {
+      if (
+        e.code === "Space" &&
+        !e.repeat &&
+        useStore.getState().viewMode === "walking"
+      ) {
         e.preventDefault();
         openSearch();
         return;
@@ -100,6 +105,7 @@ export function Hud() {
   if (viewMode === "menu") {
     const firstVisit = !useStore.getState().musicStarted;
     return (
+      <>
       <div className={styles.menu} onClick={firstVisit ? undefined : enter}>
         <h1 className={styles.title}>Digital Museum</h1>
         <p className={styles.subtitle}>A walkable gallery of canonical art</p>
@@ -129,16 +135,26 @@ export function Hud() {
             Return to Museum
           </button>
         )}
-        <button
-          className={styles.tourButton}
-          onClick={(e) => {
-            e.stopPropagation();
-            startMusic(true);
-            useStore.getState().setViewMode("tour");
-          }}
-        >
-          ✦ Take a guided tour
-        </button>
+        <div className={styles.tourRow}>
+          <button
+            className={styles.tourButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              setPanel("tour");
+            }}
+          >
+            ✦ Guided tour
+          </button>
+          <button
+            className={styles.tourButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              setPanel("browse");
+            }}
+          >
+            ☰ Browse collection
+          </button>
+        </div>
         {touch ? (
           <p className={styles.hint}>
             Left side: joystick to walk · Right side: drag to look, tap a
@@ -204,6 +220,14 @@ export function Hud() {
           </div>
         )}
       </div>
+      {panel === "tour" && (
+        <TourSetup
+          onClose={() => setPanel(null)}
+          onBrowse={() => setPanel("browse")}
+        />
+      )}
+      {panel === "browse" && <BrowsePanel onClose={() => setPanel(null)} />}
+      </>
     );
   }
 

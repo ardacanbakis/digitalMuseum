@@ -49,9 +49,10 @@ export function SearchOverlay() {
     for (const entry of manifest) {
       const data = artworkData[entry.wikidataId]?.data;
       const title = data?.title ?? entry.wikipediaTitle;
-      const artist = data?.artist ?? "";
+      const artist = data?.artist ?? entry.artist;
       const room = roomById.get(entry.room)?.name ?? "";
-      const haystack = `${title} ${artist} ${entry.wikipediaTitle}`.toLowerCase();
+      const haystack =
+        `${title} ${artist} ${entry.wikipediaTitle}`.toLowerCase();
       const idx = haystack.indexOf(q);
       if (idx === -1) continue;
       // Prefer matches at the start of the title

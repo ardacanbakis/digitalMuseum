@@ -1,70 +1,107 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { manifestById } from "../data/manifest";
-import { loadTourData, TOUR_IDS } from "../data/tour";
 import { roomById } from "../scene/rooms/roomDefs";
 import { useStore } from "../store";
 import styles from "./TourOverlay.module.css";
 
-const SLIDE_MS = 9000;
+const HIDE_AFTER_MS = 3500;
 
 /**
- * Guided tour: a full-screen slideshow of highlight artworks that advances
- * itself while the ambient music plays. Launched from the welcome menu.
+ * Guided tour: a full-screen slideshow of a chosen set of works that
+ * advances itself while the ambient music plays. Duration, auto-hide and
+ * caption size come from the tour settings in the store.
  */
 export function TourOverlay() {
   const open = useStore((s) => s.viewMode === "tour");
+  const ids = useStore((s) => s.tourIds);
+  const label = useStore((s) => s.tourLabel);
+  const durationMs = useStore((s) => s.tourDurationMs);
+  const autoHide = useStore((s) => s.tourAutoHide);
+  const fontScale = useStore((s) => s.tourFontScale);
+  const setFontScale = useStore((s) => s.setTourFontScale);
   const artworkData = useStore((s) => s.artworkData);
+
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [uiVisible, setUiVisible] = useState(true);
+  const hideTimer = useRef<number | null>(null);
 
   const exit = useCallback(() => useStore.getState().setViewMode("menu"), []);
   const go = useCallback(
     (dir: 1 | -1) =>
-      setIndex((i) => (i + dir + TOUR_IDS.length) % TOUR_IDS.length),
-    [],
+      setIndex((i) => (ids.length ? (i + dir + ids.length) % ids.length : 0)),
+    [ids.length],
   );
 
-  // Start: load every highlight's room, reset to the first slide
+  // Reset on (re)open
   useEffect(() => {
     if (!open) return;
-    loadTourData();
     setIndex(0);
     setPaused(false);
+    setUiVisible(true);
   }, [open]);
 
   // Auto-advance
   useEffect(() => {
-    if (!open || paused) return;
-    const t = window.setTimeout(() => go(1), SLIDE_MS);
+    if (!open || paused || ids.length === 0) return;
+    const t = window.setTimeout(() => go(1), durationMs);
     return () => window.clearTimeout(t);
-  }, [open, paused, index, go]);
+  }, [open, paused, index, durationMs, ids.length, go]);
 
-  // Keyboard: ←/→ navigate, Space pauses (ESC handled by the Hud)
+  // Auto-hide the UI after inactivity (when enabled)
+  const poke = useCallback(() => {
+    setUiVisible(true);
+    if (hideTimer.current !== null) window.clearTimeout(hideTimer.current);
+    if (autoHide) {
+      hideTimer.current = window.setTimeout(
+        () => setUiVisible(false),
+        HIDE_AFTER_MS,
+      );
+    }
+  }, [autoHide]);
+
+  useEffect(() => {
+    if (!open) return;
+    poke();
+    if (!autoHide) setUiVisible(true);
+    return () => {
+      if (hideTimer.current !== null) window.clearTimeout(hideTimer.current);
+    };
+  }, [open, autoHide, index, poke]);
+
+  // Keyboard: ←/→ navigate, Space pauses, +/- font (ESC handled by Hud)
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
+      poke();
       if (e.code === "ArrowRight") go(1);
       else if (e.code === "ArrowLeft") go(-1);
       else if (e.code === "Space") {
         e.preventDefault();
         setPaused((p) => !p);
-      }
+      } else if (e.key === "+" || e.key === "=") setFontScale(fontScale + 0.1);
+      else if (e.key === "-") setFontScale(fontScale - 0.1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, go]);
+  }, [open, go, poke, fontScale, setFontScale]);
 
   if (!open) return null;
 
-  const id = TOUR_IDS[index];
-  const entry = manifestById.get(id);
-  const art = artworkData[id]?.data;
+  const id = ids[index];
+  const entry = id ? manifestById.get(id) : undefined;
+  const art = id ? artworkData[id]?.data : undefined;
   const title = art?.title ?? entry?.wikipediaTitle ?? "";
   const room = entry ? (roomById.get(entry.room)?.name ?? "") : "";
   const image = art?.imageUrlLarge ?? art?.imageUrlSmall ?? art?.thumbnailUrl;
 
   return (
-    <div className={styles.overlay}>
+    <div
+      className={styles.overlay}
+      data-hidecursor={autoHide && !uiVisible}
+      onMouseMove={poke}
+      onClick={poke}
+    >
       <div className={styles.stage}>
         {image ? (
           <img key={id} className={styles.image} src={image} alt={title} />
@@ -73,44 +110,60 @@ export function TourOverlay() {
         )}
       </div>
 
-      <div className={styles.caption} key={`cap-${id}`}>
-        <span className={styles.room}>{room}</span>
-        <h2 className={styles.title}>{title}</h2>
-        <p className={styles.meta}>
-          {art?.artist}
-          {art?.artist && art?.year ? ", " : ""}
-          {art?.year}
-        </p>
-        {art?.extract && <p className={styles.extract}>{art.extract}</p>}
-      </div>
-
-      <div className={styles.progress}>
+      <div className={styles.uiLayer} data-visible={uiVisible}>
         <div
-          key={`bar-${index}-${paused}`}
-          className={styles.progressFill}
-          style={{
-            animationDuration: `${SLIDE_MS}ms`,
-            animationPlayState: paused ? "paused" : "running",
-          }}
-        />
-      </div>
+          className={styles.caption}
+          key={`cap-${id}`}
+          style={{ fontSize: `${fontScale}rem` }}
+        >
+          <span className={styles.room}>{label || room}</span>
+          <h2 className={styles.title}>{title}</h2>
+          <p className={styles.meta}>
+            {art?.artist ?? entry?.artist}
+            {(art?.artist ?? entry?.artist) && art?.year ? ", " : ""}
+            {art?.year}
+          </p>
+          {art?.extract && <p className={styles.extract}>{art.extract}</p>}
+        </div>
 
-      <div className={styles.controls}>
-        <span className={styles.counter}>
-          {index + 1} / {TOUR_IDS.length}
-        </span>
-        <button onClick={() => go(-1)} aria-label="Previous">
-          ⏮
-        </button>
-        <button onClick={() => setPaused((p) => !p)} aria-label="Play / pause">
-          {paused ? "▶" : "⏸"}
-        </button>
-        <button onClick={() => go(1)} aria-label="Next">
-          ⏭
-        </button>
-        <button className={styles.exit} onClick={exit}>
-          Exit tour
-        </button>
+        <div className={styles.progress}>
+          <div
+            key={`bar-${index}-${paused}-${durationMs}`}
+            className={styles.progressFill}
+            style={{
+              animationDuration: `${durationMs}ms`,
+              animationPlayState: paused ? "paused" : "running",
+            }}
+          />
+        </div>
+
+        <div className={styles.controls}>
+          <span className={styles.counter}>
+            {index + 1} / {ids.length}
+          </span>
+          <button onClick={() => go(-1)} aria-label="Previous">
+            ⏮
+          </button>
+          <button
+            onClick={() => setPaused((p) => !p)}
+            aria-label="Play / pause"
+          >
+            {paused ? "▶" : "⏸"}
+          </button>
+          <button onClick={() => go(1)} aria-label="Next">
+            ⏭
+          </button>
+          <span className={styles.divider} />
+          <button onClick={() => setFontScale(fontScale - 0.1)} aria-label="Smaller text">
+            A−
+          </button>
+          <button onClick={() => setFontScale(fontScale + 0.1)} aria-label="Larger text">
+            A+
+          </button>
+          <button className={styles.exit} onClick={exit}>
+            Exit
+          </button>
+        </div>
       </div>
     </div>
   );
