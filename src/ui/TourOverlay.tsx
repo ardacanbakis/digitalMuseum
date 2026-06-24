@@ -14,11 +14,12 @@ const HIDE_AFTER_MS = 3500;
 export function TourOverlay() {
   const open = useStore((s) => s.viewMode === "tour");
   const ids = useStore((s) => s.tourIds);
-  const label = useStore((s) => s.tourLabel);
   const durationMs = useStore((s) => s.tourDurationMs);
   const autoHide = useStore((s) => s.tourAutoHide);
   const fontScale = useStore((s) => s.tourFontScale);
   const setFontScale = useStore((s) => s.setTourFontScale);
+  const captionSide = useStore((s) => s.tourCaptionSide);
+  const cycleSide = useStore((s) => s.cycleTourCaptionSide);
   const artworkData = useStore((s) => s.artworkData);
 
   const [index, setIndex] = useState(0);
@@ -98,6 +99,7 @@ export function TourOverlay() {
   return (
     <div
       className={styles.overlay}
+      data-layout={captionSide}
       data-hidecursor={autoHide && !uiVisible}
       onMouseMove={poke}
       onClick={poke}
@@ -116,7 +118,7 @@ export function TourOverlay() {
           key={`cap-${id}`}
           style={{ fontSize: `${fontScale}rem` }}
         >
-          <span className={styles.room}>{label || room}</span>
+          <span className={styles.room}>{room}</span>
           <h2 className={styles.title}>{title}</h2>
           <p className={styles.meta}>
             {art?.artist ?? entry?.artist}
@@ -159,6 +161,13 @@ export function TourOverlay() {
           </button>
           <button onClick={() => setFontScale(fontScale + 0.1)} aria-label="Larger text">
             A+
+          </button>
+          <button
+            onClick={cycleSide}
+            aria-label="Move caption"
+            title="Caption position"
+          >
+            ▤
           </button>
           <button className={styles.exit} onClick={exit}>
             Exit

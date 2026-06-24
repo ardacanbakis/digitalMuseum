@@ -209,10 +209,29 @@
   color: #b8ab97;
 }
 
-.mapButton {
+.menuButton {
   position: absolute;
   top: max(12px, env(safe-area-inset-top));
   left: max(12px, env(safe-area-inset-left));
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  border: 1px solid rgba(240, 233, 221, 0.4);
+  background: rgba(20, 16, 12, 0.6);
+  color: #f0e9dd;
+  font-size: 1.1rem;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  background: rgba(212, 175, 55, 0.2);
+}
+
+.mapButton {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: calc(max(12px, env(safe-area-inset-left)) + 50px);
   width: 40px;
   height: 40px;
   border-radius: 50%;

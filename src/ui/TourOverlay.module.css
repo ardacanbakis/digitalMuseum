@@ -196,3 +196,64 @@
 .exit {
   color: #d4af37 !important;
 }
+
+/* ── side layouts: caption + controls dock left or right of the image ── */
+.overlay[data-layout="left"],
+.overlay[data-layout="right"] {
+  align-items: stretch;
+}
+
+.overlay[data-layout="left"] {
+  flex-direction: row;
+}
+
+.overlay[data-layout="right"] {
+  flex-direction: row-reverse;
+}
+
+.overlay[data-layout="left"] .stage,
+.overlay[data-layout="right"] .stage {
+  position: relative;
+  inset: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.overlay[data-layout="left"] .uiLayer,
+.overlay[data-layout="right"] .uiLayer {
+  position: relative;
+  inset: auto;
+  flex: 0 0 auto;
+  width: min(380px, 42vw);
+  justify-content: center;
+  gap: 14px;
+  padding: 24px 18px;
+  background: rgba(12, 10, 7, 0.78);
+}
+
+.overlay[data-layout="left"] .uiLayer {
+  border-right: 1px solid #2a231b;
+}
+
+.overlay[data-layout="right"] .uiLayer {
+  border-left: 1px solid #2a231b;
+}
+
+.overlay[data-layout="left"] .caption,
+.overlay[data-layout="right"] .caption {
+  background: none;
+  text-align: left;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.overlay[data-layout="left"] .extract,
+.overlay[data-layout="right"] .extract {
+  -webkit-line-clamp: 8;
+}
+
+.overlay[data-layout="left"] .controls,
+.overlay[data-layout="right"] .controls {
+  flex-wrap: wrap;
+}

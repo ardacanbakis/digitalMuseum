@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
 import { nextTrack, startMusic, togglePlay } from "../audio/musicEngine";
-import { closeInspect } from "../scene/artworks/interaction";
 import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
 import { isEditableTarget, isTouchDevice } from "../scene/player/input";
 import { BrowsePanel } from "./BrowsePanel";
@@ -45,12 +44,19 @@ function openSearch() {
   if (document.pointerLockElement) document.exitPointerLock();
 }
 
+/** Show the pause menu (releases the mouse). */
+function openMenu() {
+  const state = useStore.getState();
+  state.setViewMode("menu");
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+
 export function Hud() {
   const viewMode = useStore((s) => s.viewMode);
   const hoveredArt = useStore((s) =>
     s.hoveredArtwork ? (s.artworkData[s.hoveredArtwork]?.data ?? null) : null,
   );
-  const { enter, exit } = usePointerLock();
+  const { enter } = usePointerLock();
   const touch = isTouchDevice();
   const [showAbout, setShowAbout] = useState(false);
   const [panel, setPanel] = useState<null | "tour" | "browse">(null);
@@ -89,19 +95,47 @@ export function Hud() {
         }
       }
       if (e.key !== "Escape") return;
+      // ESC never tries to (re)acquire pointer lock — the browser treats
+      // ESC as "exit lock", so locking here would instantly bounce back
+      // and pop the menu. We move to the target unlocked state and let
+      // click-to-relock take over.
       const state = useStore.getState();
-      if (state.viewMode === "inspecting") closeInspect();
-      else if (state.viewMode === "map") toggleMap();
-      else if (state.viewMode === "search") {
+      if (state.viewMode === "inspecting") {
+        state.setSelectedArtwork(null);
+        state.setViewMode("walking"); // only the painting closes
+      } else if (state.viewMode === "map" || state.viewMode === "search") {
         state.setViewMode("walking");
-        if (!touch) requestLock();
-      } else if (state.viewMode === "tour") state.setViewMode("menu");
-      else if (document.pointerLockElement) return;
-      else if (state.viewMode === "menu") enter();
-      else state.setViewMode("menu");
+      } else if (state.viewMode === "tour") {
+        state.setViewMode("menu");
+      } else if (document.pointerLockElement) {
+        // walking + locked: let the browser exit lock → onChange → menu
+        return;
+      } else if (state.viewMode === "menu") {
+        state.setViewMode("walking"); // resume (unlocked; click to look)
+      } else {
+        state.setViewMode("menu"); // walking + already unlocked
+      }
     };
+
+    // Right mouse button toggles the menu (works even while pointer-locked)
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 2) return;
+      const mode = useStore.getState().viewMode;
+      if (mode === "walking") openMenu();
+      else if (mode === "menu") enter();
+    };
+    const onContextMenu = (e: MouseEvent) => {
+      if (!isEditableTarget(e.target)) e.preventDefault();
+    };
+
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("contextmenu", onContextMenu);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("contextmenu", onContextMenu);
+    };
   }, [touch, enter]);
 
   if (viewMode === "menu") {
@@ -259,23 +293,22 @@ export function Hud() {
           )}
         </div>
       )}
+      <button
+        className={styles.menuButton}
+        onClick={openMenu}
+        aria-label="Menu"
+        title="Menu (Esc · right-click)"
+      >
+        ☰
+      </button>
       {touch && (
-        <>
-          <button
-            className={styles.exitButton}
-            onClick={exit}
-            aria-label="Back to menu"
-          >
-            ✕
-          </button>
-          <button
-            className={styles.mapButton}
-            onClick={toggleMap}
-            aria-label="Museum map"
-          >
-            🗺
-          </button>
-        </>
+        <button
+          className={styles.mapButton}
+          onClick={toggleMap}
+          aria-label="Museum map"
+        >
+          🗺
+        </button>
       )}
     </>
   );
