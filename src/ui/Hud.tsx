@@ -3,7 +3,7 @@ import { useStore } from "../store";
 import { nextTrack, startMusic, togglePlay } from "../audio/musicEngine";
 import { closeInspect } from "../scene/artworks/interaction";
 import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
-import { isTouchDevice } from "../scene/player/input";
+import { isEditableTarget, isTouchDevice } from "../scene/player/input";
 import { BrowsePanel } from "./BrowsePanel";
 import { MusicPanel } from "./MusicPanel";
 import { TourSetup } from "./TourSetup";
@@ -63,6 +63,8 @@ export function Hud() {
   useEffect(() => {
     if (touch) return;
     const onKeyDown = (e: KeyboardEvent) => {
+      // Typing in the search box (or any field) must not trigger shortcuts
+      if (isEditableTarget(e.target)) return;
       if (
         e.code === "Space" &&
         !e.repeat &&

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { input, resetInput } from "./input";
+import { input, isEditableTarget, resetInput } from "./input";
 
 const KEY_MAP: Record<string, keyof typeof input.keys> = {
   KeyW: "forward",
@@ -19,6 +19,8 @@ const KEY_MAP: Record<string, keyof typeof input.keys> = {
 export function useKeyboardControls() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Don't capture movement keys while typing in a text field
+      if (isEditableTarget(e.target)) return;
       const action = KEY_MAP[e.code];
       if (action) {
         input.keys[action] = true;

@@ -31,3 +31,12 @@ export function resetInput() {
 export const isTouchDevice = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(pointer: coarse)").matches;
+
+/** True when a keystroke is being typed into a text field / editable
+ * element — global game/UI shortcuts must ignore these so typing works. */
+export function isEditableTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+}
