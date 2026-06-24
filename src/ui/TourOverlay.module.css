@@ -225,10 +225,17 @@
   inset: auto;
   flex: 0 0 auto;
   width: min(380px, 42vw);
+  align-items: stretch;
   justify-content: center;
   gap: 14px;
   padding: 24px 18px;
   background: rgba(12, 10, 7, 0.78);
+}
+
+/* progress + controls span the side column instead of a viewport-width bar */
+.overlay[data-layout="left"] .progress,
+.overlay[data-layout="right"] .progress {
+  width: 100%;
 }
 
 .overlay[data-layout="left"] .uiLayer {
@@ -256,4 +263,5 @@
 .overlay[data-layout="left"] .controls,
 .overlay[data-layout="right"] .controls {
   flex-wrap: wrap;
+  justify-content: center;
 }

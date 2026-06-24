@@ -164,10 +164,10 @@ export function TourOverlay() {
           </button>
           <button
             onClick={cycleSide}
-            aria-label="Move caption"
-            title="Caption position"
+            aria-label="Caption position"
+            title="Caption position (bottom / left / right)"
           >
-            ▤
+            👁
           </button>
           <button className={styles.exit} onClick={exit}>
             Exit

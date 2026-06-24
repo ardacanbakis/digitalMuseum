@@ -190,6 +190,15 @@ export function Hud() {
           >
             ☰ Browse collection
           </button>
+          <button
+            className={styles.tourButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              useStore.getState().setViewMode("map");
+            }}
+          >
+            🗺 Museum map
+          </button>
         </div>
         {touch ? (
           <p className={styles.hint}>
@@ -293,14 +302,18 @@ export function Hud() {
           )}
         </div>
       )}
-      <button
-        className={styles.menuButton}
-        onClick={openMenu}
-        aria-label="Menu"
-        title="Menu (Esc · right-click)"
-      >
-        ☰
-      </button>
+      {/* Desktop hides the cursor during look-around, so on-screen buttons
+          aren't clickable there — menu is via ESC / right-click. Touch
+          keeps the on-screen menu + map buttons. */}
+      {touch && (
+        <button
+          className={styles.menuButton}
+          onClick={openMenu}
+          aria-label="Menu"
+        >
+          ☰
+        </button>
+      )}
       {touch && (
         <button
           className={styles.mapButton}

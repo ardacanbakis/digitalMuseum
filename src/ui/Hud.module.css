@@ -57,7 +57,7 @@
 }
 
 .enterMuted {
-  background: transparent;
+  background: transparent !important;
   border: 1px solid #d4af37 !important;
   color: #d4af37 !important;
 }
