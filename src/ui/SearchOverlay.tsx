@@ -72,6 +72,10 @@ export function SearchOverlay() {
 
   if (!open) return null;
 
+  // ESC must NOT request pointer lock: from an ESC press the lock briefly
+  // succeeds, then the same ESC exits it → pointerlockchange → menu. Go to
+  // walking unlocked and let click-to-relock take over.
+  const closeNoLock = () => useStore.getState().setViewMode("walking");
   const close = () => {
     useStore.getState().setViewMode("walking");
     if (!isTouchDevice()) requestLock();
@@ -94,7 +98,7 @@ export function SearchOverlay() {
       if (results[active]) choose(results[active].id);
     } else if (e.key === "Escape") {
       e.preventDefault();
-      close();
+      closeNoLock();
     }
   };
 

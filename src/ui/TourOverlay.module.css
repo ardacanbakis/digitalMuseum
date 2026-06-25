@@ -193,6 +193,11 @@
   background: #3a322a;
 }
 
+/* In the bottom bar the groups dissolve so buttons flow in one row */
+.group {
+  display: contents;
+}
+
 .exit {
   color: #d4af37 !important;
 }
@@ -224,11 +229,11 @@
   position: relative;
   inset: auto;
   flex: 0 0 auto;
-  width: min(380px, 42vw);
+  width: min(420px, 44vw);
   align-items: stretch;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 14px;
-  padding: 24px 18px;
+  padding: 28px 22px;
   background: rgba(12, 10, 7, 0.78);
 }
 
@@ -246,6 +251,7 @@
   border-left: 1px solid #2a231b;
 }
 
+/* caption grows to fill the column and scrolls if the extract is long */
 .overlay[data-layout="left"] .caption,
 .overlay[data-layout="right"] .caption {
   background: none;
@@ -253,15 +259,41 @@
   max-width: none;
   margin: 0;
   padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .overlay[data-layout="left"] .extract,
 .overlay[data-layout="right"] .extract {
-  -webkit-line-clamp: 8;
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
 }
 
+/* stacked rows: counter / transport / adjust / exit-at-bottom */
 .overlay[data-layout="left"] .controls,
 .overlay[data-layout="right"] .controls {
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.overlay[data-layout="left"] .counter,
+.overlay[data-layout="right"] .counter {
+  text-align: center;
+  margin: 0;
+}
+
+.overlay[data-layout="left"] .group,
+.overlay[data-layout="right"] .group {
+  display: flex;
   justify-content: center;
+  gap: 8px;
+}
+
+.overlay[data-layout="left"] .exit,
+.overlay[data-layout="right"] .exit {
+  width: 100%;
+  margin-top: 4px;
 }

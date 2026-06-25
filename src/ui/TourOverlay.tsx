@@ -139,36 +139,41 @@ export function TourOverlay() {
           />
         </div>
 
+        {/* Grouped so side layouts can stack them: counter / transport /
+            adjust / exit on their own rows; bottom layout flows inline. */}
         <div className={styles.controls}>
           <span className={styles.counter}>
             {index + 1} / {ids.length}
           </span>
-          <button onClick={() => go(-1)} aria-label="Previous">
-            ⏮
-          </button>
-          <button
-            onClick={() => setPaused((p) => !p)}
-            aria-label="Play / pause"
-          >
-            {paused ? "▶" : "⏸"}
-          </button>
-          <button onClick={() => go(1)} aria-label="Next">
-            ⏭
-          </button>
-          <span className={styles.divider} />
-          <button onClick={() => setFontScale(fontScale - 0.1)} aria-label="Smaller text">
-            A−
-          </button>
-          <button onClick={() => setFontScale(fontScale + 0.1)} aria-label="Larger text">
-            A+
-          </button>
-          <button
-            onClick={cycleSide}
-            aria-label="Caption position"
-            title="Caption position (bottom / left / right)"
-          >
-            👁
-          </button>
+          <div className={styles.group}>
+            <button onClick={() => go(-1)} aria-label="Previous">
+              ⏮
+            </button>
+            <button
+              onClick={() => setPaused((p) => !p)}
+              aria-label="Play / pause"
+            >
+              {paused ? "▶" : "⏸"}
+            </button>
+            <button onClick={() => go(1)} aria-label="Next">
+              ⏭
+            </button>
+          </div>
+          <div className={styles.group}>
+            <button onClick={() => setFontScale(fontScale - 0.1)} aria-label="Smaller text">
+              A−
+            </button>
+            <button onClick={() => setFontScale(fontScale + 0.1)} aria-label="Larger text">
+              A+
+            </button>
+            <button
+              onClick={cycleSide}
+              aria-label="Caption position"
+              title="Caption position (bottom / left / right)"
+            >
+              👁
+            </button>
+          </div>
           <button className={styles.exit} onClick={exit}>
             Exit
           </button>
