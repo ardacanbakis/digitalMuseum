@@ -3,14 +3,16 @@ import type { RoomId } from "../data/types";
 
 /** "menu" = overlay, "walking" = first-person, "inspecting" = artwork
  * focus, "map" = minimap/teleport overlay, "search" = search palette,
- * "tour" = full-screen guided slideshow. */
+ * "tour" = full-screen guided slideshow, "frame" = atrium info-frame
+ * panel (welcome, donators, credits, guest book). */
 export type ViewMode =
   | "menu"
   | "walking"
   | "inspecting"
   | "map"
   | "search"
-  | "tour";
+  | "tour"
+  | "frame";
 
 export type QualityPreset = "high" | "low";
 

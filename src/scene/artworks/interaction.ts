@@ -21,6 +21,39 @@ export function registerArtworkMesh(
   };
 }
 
+/** Atrium info frames share the raycast set, tagged with a frameId. */
+export function registerFrameMesh(
+  mesh: Object3D,
+  frameId: string,
+): () => void {
+  mesh.userData.frameId = frameId;
+  interactiveMeshes.push(mesh);
+  return () => {
+    const i = interactiveMeshes.indexOf(mesh);
+    if (i !== -1) interactiveMeshes.splice(i, 1);
+  };
+}
+
+/** Open an atrium info frame's panel; unlocks the pointer on desktop. */
+export function openFrame(frameId: string): void {
+  const store = useStore.getState();
+  store.setHoveredArtwork(null);
+  store.setHoveredFrame(null);
+  store.setSelectedFrame(frameId);
+  store.setViewMode("frame");
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+
+/** Close an info frame. ESC passes relock=false (locking on ESC bounces
+ * to the menu); button/click closers relock. */
+export function closeFrame(relock = false): void {
+  const store = useStore.getState();
+  if (store.viewMode !== "frame") return;
+  store.setSelectedFrame(null);
+  store.setViewMode("walking");
+  if (relock && !isTouchDevice()) requestLock();
+}
+
 /** Enter inspect mode for an artwork; unlocks the pointer on desktop. */
 export function selectArtwork(artworkId: string): void {
   const store = useStore.getState();

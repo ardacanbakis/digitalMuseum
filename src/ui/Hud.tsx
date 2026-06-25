@@ -3,6 +3,7 @@ import { useStore } from "../store";
 import { nextTrack, startMusic, togglePlay } from "../audio/musicEngine";
 import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
 import { isEditableTarget, isTouchDevice } from "../scene/player/input";
+import { frameById } from "../data/lobbyFrames";
 import { BrowsePanel } from "./BrowsePanel";
 import { MusicPanel } from "./MusicPanel";
 import { TourSetup } from "./TourSetup";
@@ -56,6 +57,9 @@ export function Hud() {
   const hoveredArt = useStore((s) =>
     s.hoveredArtwork ? (s.artworkData[s.hoveredArtwork]?.data ?? null) : null,
   );
+  const hoveredFrameTitle = useStore((s) =>
+    s.hoveredFrame ? (frameById.get(s.hoveredFrame)?.title ?? null) : null,
+  );
   const { enter } = usePointerLock();
   const touch = isTouchDevice();
   const [showAbout, setShowAbout] = useState(false);
@@ -103,6 +107,9 @@ export function Hud() {
       if (state.viewMode === "inspecting") {
         state.setSelectedArtwork(null);
         state.setViewMode("walking"); // only the painting closes
+      } else if (state.viewMode === "frame") {
+        state.setSelectedFrame(null);
+        state.setViewMode("walking");
       } else if (state.viewMode === "map" || state.viewMode === "search") {
         state.setViewMode("walking");
       } else if (state.viewMode === "tour") {
@@ -280,7 +287,8 @@ export function Hud() {
     viewMode === "inspecting" ||
     viewMode === "map" ||
     viewMode === "search" ||
-    viewMode === "tour"
+    viewMode === "tour" ||
+    viewMode === "frame"
   ) {
     return null;
   }
@@ -288,9 +296,12 @@ export function Hud() {
   return (
     <>
       {!touch && (
-        <div className={styles.crosshair} data-hovered={hoveredArt !== null} />
+        <div
+          className={styles.crosshair}
+          data-hovered={hoveredArt !== null || hoveredFrameTitle !== null}
+        />
       )}
-      {hoveredArt && (
+      {hoveredArt ? (
         <div className={styles.tooltip}>
           <strong>{hoveredArt.title}</strong>
           {(hoveredArt.artist || hoveredArt.year) && (
@@ -301,7 +312,11 @@ export function Hud() {
             </span>
           )}
         </div>
-      )}
+      ) : hoveredFrameTitle ? (
+        <div className={styles.tooltip}>
+          <strong>{hoveredFrameTitle}</strong>
+        </div>
+      ) : null}
       {/* Desktop hides the cursor during look-around, so on-screen buttons
           aren't clickable there — menu is via ESC / right-click. Touch
           keeps the on-screen menu + map buttons. */}

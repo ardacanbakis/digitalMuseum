@@ -6,6 +6,7 @@ import {
   closeInspect,
   interactiveMeshes,
   navigateArtwork,
+  openFrame,
   selectArtwork,
   setTapRaycaster,
 } from "./interaction";
@@ -30,12 +31,15 @@ export function InteractionManager() {
     const store = useStore.getState();
     if (store.viewMode !== "walking" || !document.pointerLockElement) {
       if (store.hoveredArtwork) store.setHoveredArtwork(null);
+      if (store.hoveredFrame) store.setHoveredFrame(null);
       return;
     }
     raycaster.setFromCamera(SCREEN_CENTER, camera);
     const hit = raycaster.intersectObjects(interactiveMeshes, false)[0];
-    const id = (hit?.object.userData.artworkId as string | undefined) ?? null;
-    if (id !== store.hoveredArtwork) store.setHoveredArtwork(id);
+    const artId = (hit?.object.userData.artworkId as string | undefined) ?? null;
+    const frameId = (hit?.object.userData.frameId as string | undefined) ?? null;
+    if (artId !== store.hoveredArtwork) store.setHoveredArtwork(artId);
+    if (frameId !== store.hoveredFrame) store.setHoveredFrame(frameId);
   });
 
   useEffect(() => {
@@ -43,6 +47,7 @@ export function InteractionManager() {
       const store = useStore.getState();
       if (!document.pointerLockElement || store.viewMode !== "walking") return;
       if (store.hoveredArtwork) selectArtwork(store.hoveredArtwork);
+      else if (store.hoveredFrame) openFrame(store.hoveredFrame);
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
@@ -78,7 +83,9 @@ export function InteractionManager() {
       raycaster.setFromCamera(new Vector2(ndcX, ndcY), camera);
       const hit = raycaster.intersectObjects(interactiveMeshes, false)[0];
       const id = hit?.object.userData.artworkId as string | undefined;
+      const frameId = hit?.object.userData.frameId as string | undefined;
       if (id) selectArtwork(id);
+      else if (frameId) openFrame(frameId);
     });
     return () => setTapRaycaster(null);
   }, [camera, raycaster]);
