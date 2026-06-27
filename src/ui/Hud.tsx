@@ -5,6 +5,7 @@ import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
 import { isEditableTarget, isTouchDevice } from "../scene/player/input";
 import { frameById } from "../data/lobbyFrames";
 import { BrowsePanel } from "./BrowsePanel";
+import { Footer } from "./Footer";
 import { MusicPanel } from "./MusicPanel";
 import { TourSetup } from "./TourSetup";
 import styles from "./Hud.module.css";
@@ -233,6 +234,9 @@ export function Hud() {
           </>
         )}
         <MusicPanel />
+        <div className={styles.menuFooter}>
+          <Footer />
+        </div>
         <button
           className={styles.aboutButton}
           aria-label="About this museum"

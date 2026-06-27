@@ -7,6 +7,7 @@ import {
   screenMessage,
 } from "../api/guestbook";
 import {
+  COFFEE_URL,
   CREDITS,
   DONATORS,
   frameById,
@@ -15,7 +16,21 @@ import {
 } from "../data/lobbyFrames";
 import { closeFrame } from "../scene/artworks/interaction";
 import { useStore } from "../store";
+import { Footer } from "./Footer";
 import styles from "./FramePanel.module.css";
+
+function CoffeeButton() {
+  return (
+    <a
+      className={styles.coffee}
+      href={COFFEE_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      ☕ Buy me a coffee
+    </a>
+  );
+}
 
 export function FramePanel() {
   const frameId = useStore((s) => s.selectedFrame);
@@ -52,6 +67,9 @@ function FrameBody({ frame }: { frame: FrameDef }) {
               {p}
             </p>
           ))}
+          <div className={styles.footerWrap}>
+            <Footer />
+          </div>
         </div>
       );
     case "donators":
@@ -69,6 +87,10 @@ function FrameBody({ frame }: { frame: FrameDef }) {
               </li>
             ))}
           </ul>
+          <p className={styles.para}>
+            Want your name on this wall? Support the museum:
+          </p>
+          <CoffeeButton />
         </div>
       );
     case "credits":
@@ -76,12 +98,9 @@ function FrameBody({ frame }: { frame: FrameDef }) {
         <div className={styles.body}>
           <p className={styles.para}>{CREDITS.author}</p>
           <p className={styles.para}>{CREDITS.blurb}</p>
-          <div className={styles.links}>
-            {CREDITS.links.map((l) => (
-              <a key={l.url} href={l.url} target="_blank" rel="noreferrer">
-                {l.label}
-              </a>
-            ))}
+          <CoffeeButton />
+          <div className={styles.footerWrap}>
+            <Footer />
           </div>
         </div>
       );

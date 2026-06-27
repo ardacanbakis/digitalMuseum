@@ -93,6 +93,28 @@
   white-space: nowrap;
 }
 
+.coffee {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  background: #ffdd00;
+  color: #1c150e;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.coffee:hover {
+  background: #ffe642;
+}
+
+.footerWrap {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #3a322a;
+}
+
 .links {
   display: flex;
   flex-wrap: wrap;

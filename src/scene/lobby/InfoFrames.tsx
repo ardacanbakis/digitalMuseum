@@ -1,10 +1,152 @@
 import { useEffect, useRef } from "react";
 import { Text } from "@react-three/drei";
 import type { Mesh } from "three";
-import { FRAMES, type FrameDef } from "../../data/lobbyFrames";
+import {
+  CREDITS,
+  DONATORS,
+  FRAMES,
+  type FrameDef,
+} from "../../data/lobbyFrames";
 import { useStore } from "../../store";
 import { Frame } from "../artworks/Frame";
 import { openFrame, registerFrameMesh } from "../artworks/interaction";
+
+const INK = "#2b2118";
+const INK_SOFT = "#6a5a3f";
+const GOLD = "#7a5b1f";
+
+/** Text content drawn onto each frame so it reads at a glance. */
+function FrameContent({ frame, hovered }: { frame: FrameDef; hovered: boolean }) {
+  const { width, height } = frame;
+  const top = height / 2;
+  const hint = (text: string) => (
+    <Text
+      position={[0, -top + 0.34, 0.06]}
+      fontSize={0.15}
+      color={hovered ? GOLD : INK_SOFT}
+      anchorX="center"
+      anchorY="middle"
+    >
+      {text}
+    </Text>
+  );
+
+  switch (frame.kind) {
+    case "welcome":
+      return (
+        <>
+          <Text
+            position={[0, top - 1.0, 0.06]}
+            fontSize={0.2}
+            maxWidth={width * 0.86}
+            textAlign="center"
+            color={INK}
+            anchorX="center"
+            anchorY="top"
+          >
+            Eight halls of canonical art, pulled live from Wikipedia &amp;
+            Wikimedia.
+          </Text>
+          <Text
+            position={[0, -0.2, 0.06]}
+            fontSize={0.16}
+            maxWidth={width * 0.86}
+            textAlign="center"
+            color={INK_SOFT}
+            anchorX="center"
+            anchorY="middle"
+          >
+            WASD to walk · Mouse to look · Click art · Space to search · M for
+            the map
+          </Text>
+          {hint("click for more & links")}
+        </>
+      );
+
+    case "donators": {
+      const startY = top - 1.05;
+      const step = 0.5;
+      return (
+        <>
+          <Text
+            position={[0, top - 0.7, 0.06]}
+            fontSize={0.18}
+            color={INK_SOFT}
+            anchorX="center"
+            anchorY="middle"
+          >
+            Thank you to those who keep this museum open
+          </Text>
+          {DONATORS.slice(0, 5).map((d, i) => (
+            <Text
+              key={i}
+              position={[0, startY - i * step, 0.06]}
+              fontSize={0.3}
+              maxWidth={width * 0.9}
+              textAlign="center"
+              color={INK}
+              anchorX="center"
+              anchorY="middle"
+            >
+              {d.note ? `${d.name}  ·  ${d.note}` : d.name}
+            </Text>
+          ))}
+          {hint("☕ click to support the museum")}
+        </>
+      );
+    }
+
+    case "credits":
+      return (
+        <>
+          <Text
+            position={[0, top - 1.0, 0.06]}
+            fontSize={0.19}
+            maxWidth={width * 0.85}
+            textAlign="center"
+            color={INK}
+            anchorX="center"
+            anchorY="top"
+          >
+            {CREDITS.author}
+          </Text>
+          <Text
+            position={[0, 0, 0.06]}
+            fontSize={0.14}
+            maxWidth={width * 0.85}
+            textAlign="center"
+            color={INK_SOFT}
+            anchorX="center"
+            anchorY="middle"
+          >
+            Links · socials · support
+          </Text>
+          {hint("click to open")}
+        </>
+      );
+
+    case "guestbook":
+      return (
+        <>
+          <Text
+            position={[0, top - 1.1, 0.06]}
+            fontSize={0.2}
+            maxWidth={width * 0.85}
+            textAlign="center"
+            color={INK}
+            anchorX="center"
+            anchorY="top"
+          >
+            Leave a note for future visitors
+          </Text>
+          {hint("click to sign & read")}
+        </>
+      );
+
+    default:
+      return null;
+  }
+}
 
 function InfoFrame({ frame }: { frame: FrameDef }) {
   const hovered = useStore((s) => s.hoveredFrame === frame.id);
@@ -33,25 +175,19 @@ function InfoFrame({ frame }: { frame: FrameDef }) {
         <meshStandardMaterial color="#efe7d4" roughness={0.9} />
       </mesh>
       <Text
-        position={[0, height / 2 - 0.45, 0.06]}
-        fontSize={Math.min(0.4, width * 0.085)}
+        position={[0, height / 2 - 0.42, 0.06]}
+        fontSize={Math.min(0.42, width * 0.09)}
         maxWidth={width * 0.9}
         textAlign="center"
         anchorX="center"
         anchorY="middle"
-        color="#2b2118"
+        color={INK}
+        outlineWidth={0.004}
+        outlineColor="#d8cba8"
       >
         {frame.title}
       </Text>
-      <Text
-        position={[0, -height / 2 + 0.4, 0.06]}
-        fontSize={0.16}
-        color={hovered ? "#7a5b1f" : "#8a7a5c"}
-        anchorX="center"
-        anchorY="middle"
-      >
-        {hovered ? "click to read" : "·  ·  ·"}
-      </Text>
+      <FrameContent frame={frame} hovered={hovered} />
     </group>
   );
 }

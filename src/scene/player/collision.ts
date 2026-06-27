@@ -1,7 +1,7 @@
 import type { AABB } from "../rooms/roomDefs";
 
-export const WALK_SPEED = 2.5; // m/s
-export const RUN_SPEED = 4.5; // m/s while Shift is held
+export const WALK_SPEED = 4.5; // m/s (brisk gallery stroll)
+export const RUN_SPEED = 9.0; // m/s while Shift is held
 export const EYE_HEIGHT = 1.65; // m
 export const PLAYER_RADIUS = 0.35; // m
 
