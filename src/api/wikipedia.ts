@@ -1,4 +1,5 @@
 import { cached } from "./cache";
+import type { Lang } from "../data/i18n";
 import { fetchJson } from "./http";
 
 export interface WikipediaSummary {
@@ -16,14 +17,16 @@ interface RestSummaryResponse {
 }
 
 /**
- * Wikipedia REST summary: extract, thumbnail, canonical page URL.
- * Redirect titles resolve transparently (fetch follows the 302).
+ * Wikipedia REST summary from the given language wiki: extract, thumbnail,
+ * canonical page URL. Redirect titles resolve transparently (302). Cached
+ * per language + title.
  */
 export async function fetchWikipediaSummary(
   title: string,
+  lang: Lang = "en",
 ): Promise<WikipediaSummary> {
-  return cached(`wp:${title}`, async () => {
-    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+  return cached(`wp:${lang}:${title}`, async () => {
+    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
     const json = await fetchJson<RestSummaryResponse>(url);
     return {
       title: json.title ?? title,
@@ -31,7 +34,7 @@ export async function fetchWikipediaSummary(
       thumbnailUrl: json.thumbnail?.source,
       pageUrl:
         json.content_urls?.desktop?.page ??
-        `https://en.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`,
+        `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`,
     };
   });
 }

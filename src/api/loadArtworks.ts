@@ -1,3 +1,4 @@
+import type { Lang } from "../data/i18n";
 import { manifest } from "../data/manifest";
 import type { ArtworkEntry, FetchedArtwork, RoomId } from "../data/types";
 import { useStore } from "../store";
@@ -12,6 +13,31 @@ import {
 } from "./wikidata";
 
 const SUMMARY_CONCURRENCY = 6;
+
+/** Summary in the active language, with English fallback for Turkish when
+ * no Turkish article exists (or it has no extract). */
+async function fetchSummaryFor(
+  entry: ArtworkEntry,
+  lang: Lang,
+  facts: WikidataFacts | undefined,
+): Promise<WikipediaSummary | undefined> {
+  if (lang === "tr") {
+    const trTitle = facts?.trTitle;
+    if (trTitle) {
+      const tr = await fetchWikipediaSummary(trTitle, "tr").catch(
+        () => undefined,
+      );
+      if (tr?.extract) return tr;
+    }
+    // No Turkish article — fall back to English so something still shows.
+    return fetchWikipediaSummary(entry.wikipediaTitle, "en").catch(
+      () => undefined,
+    );
+  }
+  return fetchWikipediaSummary(entry.wikipediaTitle, "en").catch(
+    () => undefined,
+  );
+}
 
 function assemble(
   entry: ArtworkEntry,
@@ -64,23 +90,24 @@ export async function loadRoomArtworks(room: RoomId): Promise<void> {
   );
   if (todo.length === 0) return;
 
+  const lang = useStore.getState().settings.language;
+
   mergeArtworkRecords(
     Object.fromEntries(
       todo.map((e) => [e.wikidataId, { status: "loading" } as ArtworkRecord]),
     ),
   );
 
-  // Kick both sources off in parallel; each fetch retries once internally.
-  const factsPromise = fetchWikidataFacts(todo.map((e) => e.wikidataId)).catch(
+  // Facts first — Turkish summaries need the trwiki title from sitelinks.
+  const facts = await fetchWikidataFacts(todo.map((e) => e.wikidataId)).catch(
     () => ({}) as Record<string, WikidataFacts>,
   );
-  const summaries = await mapWithConcurrency(
-    todo,
-    SUMMARY_CONCURRENCY,
-    (e) =>
-      fetchWikipediaSummary(e.wikipediaTitle).catch(() => undefined),
+
+  // Summary in the active language; for Turkish use the trwiki title and
+  // fall back to the English article when there's no Turkish one.
+  const summaries = await mapWithConcurrency(todo, SUMMARY_CONCURRENCY, (e) =>
+    fetchSummaryFor(e, lang, facts[e.wikidataId]),
   );
-  const facts = await factsPromise;
 
   const filenames = todo
     .map((e) => facts[e.wikidataId]?.imageFilename)
@@ -102,7 +129,7 @@ export async function loadRoomArtworks(room: RoomId): Promise<void> {
   });
   const labels =
     linkedIds.length > 0
-      ? await fetchLabels(linkedIds).catch(
+      ? await fetchLabels(linkedIds, lang).catch(
           () => ({}) as Record<string, string>,
         )
       : {};

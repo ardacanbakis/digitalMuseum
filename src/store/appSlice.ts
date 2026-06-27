@@ -1,5 +1,16 @@
 import type { StateCreator } from "zustand";
+import type { Lang } from "../data/i18n";
 import type { RoomId } from "../data/types";
+
+const LANG_KEY = "dm:lang";
+
+function initialLang(): Lang {
+  try {
+    return localStorage.getItem(LANG_KEY) === "tr" ? "tr" : "en";
+  } catch {
+    return "en";
+  }
+}
 
 /** "menu" = overlay, "walking" = first-person, "inspecting" = artwork
  * focus, "map" = minimap/teleport overlay, "search" = search palette,
@@ -19,6 +30,7 @@ export type QualityPreset = "high" | "low";
 
 export interface Settings {
   quality: QualityPreset;
+  language: Lang;
 }
 
 export interface TeleportTarget {
@@ -43,6 +55,7 @@ export interface AppSlice {
   requestTeleport: (target: TeleportTarget) => void;
   clearTeleport: () => void;
   setQuality: (quality: QualityPreset) => void;
+  setLanguage: (language: Lang) => void;
 }
 
 export const createAppSlice: StateCreator<AppSlice, [], [], AppSlice> = (
@@ -53,7 +66,7 @@ export const createAppSlice: StateCreator<AppSlice, [], [], AppSlice> = (
   activeRooms: ["lobby"],
   playerPos: [0, 6],
   teleportTarget: null,
-  settings: { quality: "high" },
+  settings: { quality: "high", language: initialLang() },
   setViewMode: (mode) => set({ viewMode: mode }),
   setCurrentRoom: (roomId) => set({ currentRoom: roomId }),
   setActiveRooms: (rooms) => set({ activeRooms: rooms }),
@@ -62,4 +75,12 @@ export const createAppSlice: StateCreator<AppSlice, [], [], AppSlice> = (
   clearTeleport: () => set({ teleportTarget: null }),
   setQuality: (quality) =>
     set((s) => ({ settings: { ...s.settings, quality } })),
+  setLanguage: (language) => {
+    try {
+      localStorage.setItem(LANG_KEY, language);
+    } catch {
+      // ignore
+    }
+    set((s) => ({ settings: { ...s.settings, language } }));
+  },
 });

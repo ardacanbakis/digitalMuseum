@@ -1,4 +1,5 @@
 import { commonsFilePageUrl } from "../api/commons";
+import { STRINGS } from "../data/i18n";
 import { manifestById } from "../data/manifest";
 import { closeInspect, navigateArtwork } from "../scene/artworks/interaction";
 import { useStore } from "../store";
@@ -9,23 +10,24 @@ export function InfoPanel() {
   const record = useStore((s) =>
     s.selectedArtwork ? s.artworkData[s.selectedArtwork] : undefined,
   );
+  const t = STRINGS[useStore((s) => s.settings.language)];
 
   if (!selectedId) return null;
   const art = record?.data;
   const isSculpture = manifestById.get(selectedId)?.type === "sculpture";
 
   const facts: [label: string, value: string | undefined][] = [
-    ["Artist", art?.artist],
-    ["Year", art?.year],
-    ["Medium", art?.medium],
+    [t.artist, art?.artist],
+    [t.year, art?.year],
+    [t.medium, art?.medium],
     [
-      "Dimensions",
+      t.dimensions,
       art?.heightCm !== undefined && art?.widthCm !== undefined
         ? `${art.heightCm} × ${art.widthCm} cm`
         : undefined,
     ],
-    ["Location", art?.collection],
-    ["Movement", art?.movement],
+    [t.location, art?.collection],
+    [t.movement, art?.movement],
   ];
 
   return (
@@ -55,12 +57,7 @@ export function InfoPanel() {
       <div className={styles.body}>
         <h2 className={styles.title}>{art?.title ?? "…"}</h2>
         {isSculpture && (
-          <p className={styles.sculptureNote}>
-            Sculpture — shown here as a photograph. The original is a
-            three-dimensional work meant to be seen in the round; free 3D
-            museum scans (e.g. the Smithsonian's) could replace this view in
-            the future.
-          </p>
+          <p className={styles.sculptureNote}>{t.sculptureNote}</p>
         )}
         <dl className={styles.facts}>
           {facts.map(([label, value]) =>
@@ -74,16 +71,14 @@ export function InfoPanel() {
         </dl>
         {art?.extract && <p className={styles.extract}>{art.extract}</p>}
         {record?.status === "error" && (
-          <p className={styles.error}>
-            Details couldn’t be loaded right now — close and reopen to retry.
-          </p>
+          <p className={styles.error}>{t.detailsError}</p>
         )}
         <footer className={styles.attribution}>
-          <span>Source: Wikipedia / Wikimedia Commons</span>
+          <span>{t.source}</span>
           <span className={styles.attributionLinks}>
             {art?.wikipediaUrl && (
               <a href={art.wikipediaUrl} target="_blank" rel="noreferrer">
-                Wikipedia article
+                {t.wikiArticle}
               </a>
             )}
             {art?.imageFilename && (
@@ -92,15 +87,12 @@ export function InfoPanel() {
                 target="_blank"
                 rel="noreferrer"
               >
-                Image file
+                {t.imageFile}
               </a>
             )}
           </span>
         </footer>
-        <p className={styles.hint}>
-          ← → browse the room · scroll to zoom · drag to pan · ESC, Space, or
-          double-click to return it to the wall
-        </p>
+        <p className={styles.hint}>{t.panelHint}</p>
       </div>
       </aside>
     </>

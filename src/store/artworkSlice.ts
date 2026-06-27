@@ -17,6 +17,7 @@ export interface ArtworkSlice {
   selectedFrame: string | null;
   hoveredFrame: string | null;
   mergeArtworkRecords: (records: Record<string, ArtworkRecord>) => void;
+  clearArtworkData: () => void;
   setSelectedArtwork: (wikidataId: string | null) => void;
   setHoveredArtwork: (wikidataId: string | null) => void;
   setSelectedFrame: (frameId: string | null) => void;
@@ -33,6 +34,7 @@ export const createArtworkSlice: StateCreator<ArtworkSlice, [], [], ArtworkSlice
   hoveredFrame: null,
   mergeArtworkRecords: (records) =>
     set((s) => ({ artworkData: { ...s.artworkData, ...records } })),
+  clearArtworkData: () => set({ artworkData: {} }),
   setSelectedArtwork: (wikidataId) => set({ selectedArtwork: wikidataId }),
   setHoveredArtwork: (wikidataId) => set({ hoveredArtwork: wikidataId }),
   setSelectedFrame: (frameId) => set({ selectedFrame: frameId }),

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useStore } from "../store";
 import { nextTrack, startMusic, togglePlay } from "../audio/musicEngine";
 import { fetchSupporters } from "../api/supporters";
+import { loadRoomArtworks } from "../api/loadArtworks";
+import { LANGUAGES, STRINGS, type Lang } from "../data/i18n";
 import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
 import { isEditableTarget, isTouchDevice } from "../scene/player/input";
 import { frameById } from "../data/lobbyFrames";
@@ -47,6 +49,17 @@ function openSearch() {
   if (document.pointerLockElement) document.exitPointerLock();
 }
 
+/** Switch UI + artwork-data language: clears the (other-language) data
+ * and reloads the rooms the visitor is near in the new language. */
+function switchLanguage(lang: Lang) {
+  const s = useStore.getState();
+  if (s.settings.language === lang) return;
+  s.setLanguage(lang);
+  s.clearArtworkData();
+  const rooms = new Set([s.currentRoom, ...s.activeRooms]);
+  rooms.forEach((r) => void loadRoomArtworks(r));
+}
+
 /** Show the pause menu (releases the mouse). */
 function openMenu() {
   const state = useStore.getState();
@@ -62,6 +75,7 @@ export function Hud() {
   const hoveredFrameTitle = useStore((s) =>
     s.hoveredFrame ? (frameById.get(s.hoveredFrame)?.title ?? null) : null,
   );
+  const language = useStore((s) => s.settings.language);
   const { enter } = usePointerLock();
   const touch = isTouchDevice();
   const [showAbout, setShowAbout] = useState(false);
@@ -220,6 +234,19 @@ export function Hud() {
           >
             🗺 Museum map
           </button>
+        </div>
+        <div className={styles.langRow} onClick={(e) => e.stopPropagation()}>
+          <span>{STRINGS[language].language}:</span>
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              className={styles.langBtn}
+              data-active={language === l.code}
+              onClick={() => switchLanguage(l.code)}
+            >
+              {l.label}
+            </button>
+          ))}
         </div>
         {touch ? (
           <p className={styles.hint}>

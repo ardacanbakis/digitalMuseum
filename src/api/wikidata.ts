@@ -1,3 +1,4 @@
+import type { Lang } from "../data/i18n";
 import { cacheGet, cacheSet } from "./cache";
 import { chunk, fetchJson } from "./http";
 
@@ -27,6 +28,8 @@ export interface WikidataFacts {
   collectionIds: string[];
   locationIds: string[];
   movementIds: string[];
+  /** Turkish Wikipedia article title (from the trwiki sitelink), if any. */
+  trTitle?: string;
 }
 
 // --- minimal wbgetentities response types -------------------------------
@@ -48,6 +51,7 @@ interface Entity {
   id: string;
   claims?: Record<string, Claim[]>;
   labels?: Record<string, { value: string }>;
+  sitelinks?: Record<string, { title?: string }>;
 }
 
 interface EntitiesResponse {
@@ -120,6 +124,7 @@ function parseFacts(entity: Entity): WikidataFacts {
     collectionIds: entityIdValues(entity, P_COLLECTION),
     locationIds: entityIdValues(entity, P_LOCATION),
     movementIds: entityIdValues(entity, P_MOVEMENT),
+    trTitle: entity.sitelinks?.trwiki?.title,
   };
 }
 
@@ -135,51 +140,56 @@ export async function fetchWikidataFacts(
   const result: Record<string, WikidataFacts> = {};
   const misses: string[] = [];
 
+  // v2 key: now also carries the trwiki sitelink for Turkish titles.
   for (const id of ids) {
-    const hit = cacheGet<WikidataFacts>(`wd:${id}`);
+    const hit = cacheGet<WikidataFacts>(`wd2:${id}`);
     if (hit !== undefined) result[id] = hit;
     else misses.push(id);
   }
 
   for (const batch of chunk(misses, BATCH_SIZE)) {
-    const url = `${API}?action=wbgetentities&ids=${batch.join("|")}&format=json&props=claims&origin=*`;
+    const url = `${API}?action=wbgetentities&ids=${batch.join("|")}&format=json&props=claims|sitelinks&origin=*`;
     const json = await fetchJson<EntitiesResponse>(url);
     for (const id of batch) {
       const entity = json.entities?.[id];
       if (!entity?.claims) continue;
       const facts = parseFacts(entity);
       result[id] = facts;
-      cacheSet(`wd:${id}`, facts);
+      cacheSet(`wd2:${id}`, facts);
     }
   }
   return result;
 }
 
 /**
- * Resolve entity labels (artists, museums, materials, movements) in
- * batched calls, cached per entity.
+ * Resolve entity labels (artists, museums, materials, movements) in the
+ * requested language, falling back to English. Batched and cached per
+ * language + entity.
  */
 export async function fetchLabels(
   ids: string[],
+  lang: Lang = "en",
 ): Promise<Record<string, string>> {
   const unique = [...new Set(ids)];
   const result: Record<string, string> = {};
   const misses: string[] = [];
 
   for (const id of unique) {
-    const hit = cacheGet<string>(`wdl:${id}`);
+    const hit = cacheGet<string>(`wdl:${lang}:${id}`);
     if (hit !== undefined) result[id] = hit;
     else misses.push(id);
   }
 
+  const langs = lang === "en" ? "en" : `${lang}|en`;
   for (const batch of chunk(misses, BATCH_SIZE)) {
-    const url = `${API}?action=wbgetentities&ids=${batch.join("|")}&format=json&props=labels&languages=en&origin=*`;
+    const url = `${API}?action=wbgetentities&ids=${batch.join("|")}&format=json&props=labels&languages=${langs}&origin=*`;
     const json = await fetchJson<EntitiesResponse>(url);
     for (const id of batch) {
-      const label = json.entities?.[id]?.labels?.en?.value;
+      const labels = json.entities?.[id]?.labels;
+      const label = labels?.[lang]?.value ?? labels?.en?.value;
       if (label) {
         result[id] = label;
-        cacheSet(`wdl:${id}`, label);
+        cacheSet(`wdl:${lang}:${id}`, label);
       }
     }
   }
