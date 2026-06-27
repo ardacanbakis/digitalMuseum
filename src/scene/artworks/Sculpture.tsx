@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Billboard } from "@react-three/drei";
-import { Vector3, type Group, type Material, type Mesh } from "three";
+import { DoubleSide, Vector3, type Group, type Material, type Mesh } from "three";
 import type { ArtworkEntry } from "../../data/types";
 import { useStore } from "../../store";
 import { registerArtworkMesh, selectArtwork } from "./interaction";
@@ -104,6 +104,7 @@ export function Sculpture({
       <Billboard lockX lockZ>
         <mesh
           ref={meshRef}
+          frustumCulled={false}
           onClick={(e) => {
             e.stopPropagation();
             if (document.pointerLockElement || e.delta > 5) return;
@@ -117,10 +118,16 @@ export function Sculpture({
         >
           <planeGeometry args={[width, height]} />
           {texture ? (
-            <meshBasicMaterial map={texture} toneMapped={false} />
+            <meshBasicMaterial
+              map={texture}
+              toneMapped={false}
+              side={DoubleSide}
+              transparent
+            />
           ) : (
             <meshStandardMaterial
               color={hovered ? "#5a5347" : "#494337"}
+              side={DoubleSide}
             />
           )}
         </mesh>

@@ -35,20 +35,51 @@ export const DONATORS: { name: string; note?: string }[] = [
   { name: "Your Name Here", note: "Founding Patron" },
   { name: "A Generous Visitor", note: "Gold Supporter" },
   { name: "Another Kind Soul", note: "Supporter" },
-  { name: "— add supporters in src/data/lobbyFrames.ts —" },
 ];
 
-/** ── Credits & links (EDIT the URLs) ── */
+/** Buy Me a Coffee support link (used on the credits + supporters frames). */
+export const COFFEE_URL = "https://buymeacoffee.com/ardacanbakis";
+
+/** ── Credits text ── */
 export const CREDITS = {
-  author: "Created by Arda",
+  author: "Created by Arda Canbakış",
   blurb:
     "A passion project built with React, Three.js and the open knowledge of Wikimedia.",
-  links: [
-    { label: "GitHub", url: "https://github.com/ardacanbakis" },
-    { label: "Buy me a coffee", url: "https://www.buymeacoffee.com/" },
-    // { label: "X / Twitter", url: "https://x.com/yourhandle" },
-  ],
 };
+
+/** Website + socials shown in the welcome-frame footer and the pause menu. */
+export type SocialIcon =
+  | "globe"
+  | "github"
+  | "instagram"
+  | "youtube"
+  | "spotify"
+  | "linkedin";
+
+export const SOCIAL_LINKS: { label: string; url: string; icon: SocialIcon }[] = [
+  { label: "Website", url: "https://ardacanbakis.com", icon: "globe" },
+  { label: "GitHub", url: "https://github.com/ardacanbakis", icon: "github" },
+  {
+    label: "Instagram",
+    url: "https://www.instagram.com/arda.canbakiss/",
+    icon: "instagram",
+  },
+  {
+    label: "YouTube",
+    url: "https://www.youtube.com/@arda.canbakis",
+    icon: "youtube",
+  },
+  {
+    label: "Spotify",
+    url: "https://open.spotify.com/user/11146430303",
+    icon: "spotify",
+  },
+  {
+    label: "LinkedIn",
+    url: "http://linkedin.com/in/ardacanbakis",
+    icon: "linkedin",
+  },
+];
 
 /** Frame placements on the atrium walls (atrium is 30×20, centered at 0,0). */
 export const FRAMES: FrameDef[] = [

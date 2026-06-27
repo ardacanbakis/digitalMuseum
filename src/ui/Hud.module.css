@@ -39,6 +39,10 @@
   justify-content: center;
 }
 
+.menuFooter {
+  margin-top: 22px;
+}
+
 .tourButton {
   margin-top: 14px;
   padding: 9px 22px;
