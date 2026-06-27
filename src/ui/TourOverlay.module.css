@@ -23,8 +23,10 @@
 }
 
 .image {
-  max-width: 96%;
-  max-height: 82vh;
+  /* contain → scales to fill whatever space we allow, no distortion.
+     On ultra-wide/short screens height is the limit, so allow most of it. */
+  max-width: 97%;
+  max-height: min(88vh, 100vh - 120px);
   object-fit: contain;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
   border: 6px solid #1a140d;

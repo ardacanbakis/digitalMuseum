@@ -94,8 +94,8 @@
 }
 
 .coffee {
-  align-self: flex-start;
-  margin-top: 2px;
+  align-self: center;
+  margin-top: 6px;
   padding: 9px 18px;
   border-radius: 8px;
   background: #ffdd00;

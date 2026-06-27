@@ -300,6 +300,27 @@ export function Hud() {
   return (
     <>
       {!touch && (
+        <div className={styles.roamHint}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect
+              x="6"
+              y="2.5"
+              width="12"
+              height="19"
+              rx="6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            />
+            <path d="M12 3.5v6" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M12.4 3.2h2.6a3 3 0 0 1 3 3V9h-5.6z" fill="currentColor" />
+          </svg>
+          <span>
+            <kbd>Esc</kbd> or right-click for menu
+          </span>
+        </div>
+      )}
+      {!touch && (
         <div
           className={styles.crosshair}
           data-hovered={hoveredArt !== null || hoveredFrameTitle !== null}
