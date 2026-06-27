@@ -86,6 +86,10 @@ export function SearchOverlay() {
     if (!isTouchDevice()) requestLock();
   };
 
+  // Secret entrance: typing "admin" reveals the admin panel.
+  const isAdmin = query.trim().toLowerCase() === "admin";
+  const openAdmin = () => useStore.getState().setViewMode("admin");
+
   const onKeyDown = (e: ReactKeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -95,7 +99,8 @@ export function SearchOverlay() {
       setActive((a) => Math.max(a - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (results[active]) choose(results[active].id);
+      if (isAdmin) openAdmin();
+      else if (results[active]) choose(results[active].id);
     } else if (e.key === "Escape") {
       e.preventDefault();
       closeNoLock();
@@ -116,7 +121,23 @@ export function SearchOverlay() {
           }}
           onKeyDown={onKeyDown}
         />
-        {results.length > 0 && (
+        {isAdmin && (
+          <ul className={styles.results}>
+            <li>
+              <button
+                className={styles.result}
+                data-active
+                onClick={openAdmin}
+              >
+                <span className={styles.resultTitle}>🔒 Admin panel</span>
+                <span className={styles.resultSub}>
+                  Moderate comments · edit supporters
+                </span>
+              </button>
+            </li>
+          </ul>
+        )}
+        {!isAdmin && results.length > 0 && (
           <ul className={styles.results}>
             {results.map((r, i) => (
               <li key={r.id}>
@@ -133,7 +154,7 @@ export function SearchOverlay() {
             ))}
           </ul>
         )}
-        {query.trim() && results.length === 0 && (
+        {!isAdmin && query.trim() && results.length === 0 && (
           <p className={styles.empty}>No matches</p>
         )}
         <p className={styles.hint}>↑↓ to choose · Enter to teleport · ESC to close</p>

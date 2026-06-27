@@ -109,6 +109,34 @@
   background: #ffe642;
 }
 
+.actionRow {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.actionRow .coffee {
+  align-self: auto;
+  margin-top: 0;
+}
+
+.github {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid #4a4136;
+  background: #2b241c;
+  color: #e7dcc8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.github:hover {
+  background: #3a322a;
+}
+
 .footerWrap {
   margin-top: 14px;
   padding-top: 14px;

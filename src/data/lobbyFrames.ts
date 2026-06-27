@@ -40,6 +40,9 @@ export const DONATORS: { name: string; note?: string }[] = [
 /** Buy Me a Coffee support link (used on the credits + supporters frames). */
 export const COFFEE_URL = "https://buymeacoffee.com/ardacanbakis";
 
+/** This project's repository (main branch). */
+export const REPO_URL = "https://github.com/ardacanbakis/digitalMuseum/tree/main";
+
 /** ── Credits text ── */
 export const CREDITS = {
   author: "Created by Arda Canbakış",

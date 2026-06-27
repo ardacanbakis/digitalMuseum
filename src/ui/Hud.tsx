@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
 import { nextTrack, startMusic, togglePlay } from "../audio/musicEngine";
+import { fetchSupporters } from "../api/supporters";
 import { requestLock, usePointerLock } from "../scene/player/usePointerLock";
 import { isEditableTarget, isTouchDevice } from "../scene/player/input";
 import { frameById } from "../data/lobbyFrames";
@@ -66,6 +67,14 @@ export function Hud() {
   const [showAbout, setShowAbout] = useState(false);
   const [panel, setPanel] = useState<null | "tour" | "browse">(null);
 
+  // Load the (possibly Supabase-backed) supporters list once on startup
+  // so the 3D frame and panels show the live roster.
+  useEffect(() => {
+    fetchSupporters()
+      .then((s) => useStore.getState().setSupporters(s))
+      .catch(() => undefined);
+  }, []);
+
   // All ESC behavior lives in this one handler so modes never fight:
   // inspecting → put the painting back; map → close map; walking
   // (unlocked) → menu; menu → re-enter. While pointer-locked, the browser
@@ -111,7 +120,11 @@ export function Hud() {
       } else if (state.viewMode === "frame") {
         state.setSelectedFrame(null);
         state.setViewMode("walking");
-      } else if (state.viewMode === "map" || state.viewMode === "search") {
+      } else if (
+        state.viewMode === "map" ||
+        state.viewMode === "search" ||
+        state.viewMode === "admin"
+      ) {
         state.setViewMode("walking");
       } else if (state.viewMode === "tour") {
         state.setViewMode("menu");
@@ -292,7 +305,8 @@ export function Hud() {
     viewMode === "map" ||
     viewMode === "search" ||
     viewMode === "tour" ||
-    viewMode === "frame"
+    viewMode === "frame" ||
+    viewMode === "admin"
   ) {
     return null;
   }
