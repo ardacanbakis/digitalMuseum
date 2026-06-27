@@ -1,4 +1,5 @@
 import type { RoomId } from "../../data/types";
+import type { FloorStyle } from "../textures";
 
 /** Axis-aligned bounding box in the XZ plane (walls span full room height). */
 export interface AABB {
@@ -44,6 +45,8 @@ export interface RoomDef {
   wallColor: string;
   floorColor: string;
   ceilingColor: string;
+  /** Procedural floor surface style. */
+  floorStyle: FloorStyle;
   /** Wall segments (door gaps already cut out). */
   walls: AABB[];
   /** Boxes above door gaps, from DOOR_HEIGHT up to the ceiling. Render only. */
@@ -111,6 +114,7 @@ interface RoomInput {
   wallColor: string;
   floorColor: string;
   ceilingColor?: string;
+  floorStyle?: FloorStyle;
   doors?: DoorSpec[];
   obstacles?: Obstacle[];
   spawn: [number, number];
@@ -164,6 +168,7 @@ function makeRoom(input: RoomInput): RoomDef {
   return {
     ...input,
     wallThickness: t,
+    floorStyle: input.floorStyle ?? "marble",
     ceilingColor: input.ceilingColor ?? "#d8d2c8",
     spawnYaw: input.spawnYaw ?? Math.PI,
     walls,
@@ -199,7 +204,8 @@ export const lobby: RoomDef = makeRoom({
   height: 6,
   center: [0, 0],
   wallColor: "#b8aa92",
-  floorColor: "#6e5c45",
+  floorColor: "#b3a890",
+  floorStyle: "marble",
   ceilingColor: "#e2dccf",
   spawn: [0, 6],
   spawnYaw: 0, // face north into the atrium
@@ -222,7 +228,8 @@ export const renaissanceRoom: RoomDef = makeRoom({
   height: 5,
   center: [-14, -18],
   wallColor: "#7d2e2a", // deep venetian red
-  floorColor: "#564434",
+  floorColor: "#9a8568",
+  floorStyle: "marble",
   spawn: [-8, -12],
   spawnYaw: 0, // entering from the south door, face into the room
   doors: [{ side: "south", offset: 6 }],
@@ -237,7 +244,8 @@ export const baroqueRoom: RoomDef = makeRoom({
   height: 5,
   center: [14, -18],
   wallColor: "#3a4434", // dark gallery green
-  floorColor: "#4e3e30",
+  floorColor: "#c8c0b0",
+  floorStyle: "checker",
   spawn: [8, -12],
   spawnYaw: 0, // entering from the south door, face into the room
   doors: [{ side: "south", offset: -6 }],
@@ -252,7 +260,8 @@ export const romanticismRoom: RoomDef = makeRoom({
   height: 5,
   center: [-14, 18],
   wallColor: "#39465c", // stormy blue
-  floorColor: "#56473a",
+  floorColor: "#6f5337",
+  floorStyle: "wood",
   spawn: [-8, 12],
   spawnYaw: Math.PI, // entering from the north door, face into the room
   doors: [{ side: "north", offset: 6 }],
@@ -267,7 +276,8 @@ export const impressionismRoom: RoomDef = makeRoom({
   height: 5,
   center: [14, 18],
   wallColor: "#9aa78c", // soft sage
-  floorColor: "#5c4a38",
+  floorColor: "#8a6f4b",
+  floorStyle: "wood",
   spawn: [8, 12],
   spawnYaw: Math.PI, // entering from the north door, face into the room
   doors: [{ side: "north", offset: -6 }],
@@ -282,7 +292,8 @@ export const modernRoom: RoomDef = makeRoom({
   height: 5,
   center: [23, 0],
   wallColor: "#d6d2c9", // white-cube gallery
-  floorColor: "#7a756c",
+  floorColor: "#a7a39a",
+  floorStyle: "concrete",
   spawn: [19, 0],
   spawnYaw: -Math.PI / 2,
   doors: [{ side: "west", offset: 0 }],
@@ -297,7 +308,8 @@ export const sculptureRoom: RoomDef = makeRoom({
   height: 6,
   center: [-23, 0],
   wallColor: "#a9a294", // warm stone
-  floorColor: "#8c8578",
+  floorColor: "#b6ab92",
+  floorStyle: "travertine",
   ceilingColor: "#e8e3d8",
   spawn: [-19, 0],
   spawnYaw: Math.PI / 2,
