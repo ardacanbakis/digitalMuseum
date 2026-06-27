@@ -86,7 +86,7 @@ export const FRAMES: FrameDef[] = [
   {
     id: "welcome",
     kind: "welcome",
-    title: "Welcome",
+    title: "Welcome to the Digital Museum",
     position: [0, 1.7, -9.6], // north wall, faces +Z into the lobby
     rotationY: 0,
     width: 4.6,
@@ -105,10 +105,10 @@ export const FRAMES: FrameDef[] = [
     id: "credits",
     kind: "credits",
     title: "Credits",
-    position: [-14.6, 1.6, -4], // west wall, faces +X
+    position: [-14.6, 1.5, -4.5], // west wall, faces +X (compact)
     rotationY: Math.PI / 2,
-    width: 2.2,
-    height: 2.8,
+    width: 1.7,
+    height: 2.0,
   },
   {
     id: "guestbook",

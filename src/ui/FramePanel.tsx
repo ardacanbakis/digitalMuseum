@@ -61,7 +61,6 @@ function FrameBody({ frame }: { frame: FrameDef }) {
     case "welcome":
       return (
         <div className={styles.body}>
-          <h3 className={styles.heading}>{WELCOME.heading}</h3>
           {WELCOME.paragraphs.map((p, i) => (
             <p key={i} className={styles.para}>
               {p}

@@ -213,6 +213,33 @@
   color: #b8ab97;
 }
 
+.roamHint {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(240, 233, 221, 0.4);
+  font-size: 0.78rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+.roamHint svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.roamHint kbd {
+  font-family: inherit;
+  font-size: 0.72rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(240, 233, 221, 0.3);
+}
+
 .menuButton {
   position: absolute;
   top: max(12px, env(safe-area-inset-top));

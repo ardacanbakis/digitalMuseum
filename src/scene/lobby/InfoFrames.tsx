@@ -1,12 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Text } from "@react-three/drei";
 import type { Mesh } from "three";
-import {
-  CREDITS,
-  DONATORS,
-  FRAMES,
-  type FrameDef,
-} from "../../data/lobbyFrames";
+import { DONATORS, FRAMES, type FrameDef } from "../../data/lobbyFrames";
 import { useStore } from "../../store";
 import { Frame } from "../artworks/Frame";
 import { openFrame, registerFrameMesh } from "../artworks/interaction";
@@ -33,43 +28,16 @@ function FrameContent({ frame, hovered }: { frame: FrameDef; hovered: boolean })
 
   switch (frame.kind) {
     case "welcome":
-      return (
-        <>
-          <Text
-            position={[0, top - 1.0, 0.06]}
-            fontSize={0.2}
-            maxWidth={width * 0.86}
-            textAlign="center"
-            color={INK}
-            anchorX="center"
-            anchorY="top"
-          >
-            Eight halls of canonical art, pulled live from Wikipedia &amp;
-            Wikimedia.
-          </Text>
-          <Text
-            position={[0, -0.2, 0.06]}
-            fontSize={0.16}
-            maxWidth={width * 0.86}
-            textAlign="center"
-            color={INK_SOFT}
-            anchorX="center"
-            anchorY="middle"
-          >
-            WASD to walk · Mouse to look · Click art · Space to search · M for
-            the map
-          </Text>
-          {hint("click for more & links")}
-        </>
-      );
+      // Brief on the wall; the full text lives in the pop-up panel.
+      return hint("click for further information");
 
     case "donators": {
-      const startY = top - 1.05;
+      const startY = top - 1.7;
       const step = 0.5;
       return (
         <>
           <Text
-            position={[0, top - 0.7, 0.06]}
+            position={[0, top - 1.15, 0.06]}
             fontSize={0.18}
             color={INK_SOFT}
             anchorX="center"
@@ -91,39 +59,13 @@ function FrameContent({ frame, hovered }: { frame: FrameDef; hovered: boolean })
               {d.note ? `${d.name}  ·  ${d.note}` : d.name}
             </Text>
           ))}
-          {hint("☕ click to support the museum")}
         </>
       );
     }
 
     case "credits":
-      return (
-        <>
-          <Text
-            position={[0, top - 1.0, 0.06]}
-            fontSize={0.19}
-            maxWidth={width * 0.85}
-            textAlign="center"
-            color={INK}
-            anchorX="center"
-            anchorY="top"
-          >
-            {CREDITS.author}
-          </Text>
-          <Text
-            position={[0, 0, 0.06]}
-            fontSize={0.14}
-            maxWidth={width * 0.85}
-            textAlign="center"
-            color={INK_SOFT}
-            anchorX="center"
-            anchorY="middle"
-          >
-            Links · socials · support
-          </Text>
-          {hint("click to open")}
-        </>
-      );
+      // Compact: title + invitation only.
+      return hint("Click me!");
 
     case "guestbook":
       return (
@@ -175,12 +117,12 @@ function InfoFrame({ frame }: { frame: FrameDef }) {
         <meshStandardMaterial color="#efe7d4" roughness={0.9} />
       </mesh>
       <Text
-        position={[0, height / 2 - 0.42, 0.06]}
-        fontSize={Math.min(0.42, width * 0.09)}
+        position={[0, height / 2 - 0.28, 0.06]}
+        fontSize={Math.min(0.4, width * 0.09)}
         maxWidth={width * 0.9}
         textAlign="center"
         anchorX="center"
-        anchorY="middle"
+        anchorY="top"
         color={INK}
         outlineWidth={0.004}
         outlineColor="#d8cba8"
