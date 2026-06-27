@@ -12,7 +12,8 @@ export type ViewMode =
   | "map"
   | "search"
   | "tour"
-  | "frame";
+  | "frame"
+  | "admin";
 
 export type QualityPreset = "high" | "low";
 

@@ -6,12 +6,25 @@ import { useStore } from "../../store";
 import { Frame } from "../artworks/Frame";
 import { openFrame, registerFrameMesh } from "../artworks/interaction";
 
+interface NamedSupporter {
+  name: string;
+  note?: string;
+}
+
 const INK = "#2b2118";
 const INK_SOFT = "#6a5a3f";
 const GOLD = "#7a5b1f";
 
 /** Text content drawn onto each frame so it reads at a glance. */
-function FrameContent({ frame, hovered }: { frame: FrameDef; hovered: boolean }) {
+function FrameContent({
+  frame,
+  hovered,
+  supporters,
+}: {
+  frame: FrameDef;
+  hovered: boolean;
+  supporters: NamedSupporter[];
+}) {
   const { width, height } = frame;
   const top = height / 2;
   const hint = (text: string) => (
@@ -45,7 +58,7 @@ function FrameContent({ frame, hovered }: { frame: FrameDef; hovered: boolean })
           >
             Thank you to those who keep this museum open
           </Text>
-          {DONATORS.slice(0, 5).map((d, i) => (
+          {supporters.slice(0, 5).map((d, i) => (
             <Text
               key={i}
               position={[0, startY - i * step, 0.06]}
@@ -92,6 +105,8 @@ function FrameContent({ frame, hovered }: { frame: FrameDef; hovered: boolean })
 
 function InfoFrame({ frame }: { frame: FrameDef }) {
   const hovered = useStore((s) => s.hoveredFrame === frame.id);
+  const stored = useStore((s) => s.supporters);
+  const supporters: NamedSupporter[] = stored.length ? stored : DONATORS;
   const meshRef = useRef<Mesh>(null);
 
   useEffect(() => {
@@ -129,7 +144,7 @@ function InfoFrame({ frame }: { frame: FrameDef }) {
       >
         {frame.title}
       </Text>
-      <FrameContent frame={frame} hovered={hovered} />
+      <FrameContent frame={frame} hovered={hovered} supporters={supporters} />
     </group>
   );
 }

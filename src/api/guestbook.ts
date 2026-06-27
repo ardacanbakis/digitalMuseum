@@ -37,13 +37,18 @@ export interface Comment {
   created_at: string;
 }
 
-const URL_BASE = import.meta.env.VITE_SUPABASE_URL;
-const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import {
+  localId,
+  restHeaders,
+  restUrl,
+  supabaseConfigured,
+} from "./supabaseRest";
+
 const LOCAL_KEY = "dm:guestbook";
 const MAX_LEN = 1000;
 
 export function isGuestbookShared(): boolean {
-  return Boolean(URL_BASE && ANON_KEY);
+  return supabaseConfigured();
 }
 
 // Light profanity guard — rejects the most obvious slurs/abuse at submit
@@ -70,15 +75,6 @@ export function screenMessage(text: string): string | null {
   return null; // ok
 }
 
-function restHeaders(extra?: Record<string, string>) {
-  return {
-    apikey: ANON_KEY as string,
-    Authorization: `Bearer ${ANON_KEY}`,
-    "Content-Type": "application/json",
-    ...extra,
-  };
-}
-
 function readLocal(): Comment[] {
   try {
     return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? "[]") as Comment[];
@@ -87,12 +83,22 @@ function readLocal(): Comment[] {
   }
 }
 
+function writeLocal(list: Comment[]) {
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(list.slice(0, 200)));
+  } catch {
+    // quota — ignore
+  }
+}
+
 export async function fetchComments(): Promise<Comment[]> {
   if (!isGuestbookShared()) {
     return readLocal().sort((a, b) => b.created_at.localeCompare(a.created_at));
   }
   const res = await fetch(
-    `${URL_BASE}/rest/v1/comments?select=id,name,message,created_at&order=created_at.desc&limit=200`,
+    restUrl(
+      "comments?select=id,name,message,created_at&order=created_at.desc&limit=200",
+    ),
     { headers: restHeaders() },
   );
   if (!res.ok) throw new Error(`Guestbook fetch failed (${res.status})`);
@@ -108,21 +114,16 @@ export async function postComment(
 
   if (!isGuestbookShared()) {
     const entry: Comment = {
-      id: `local-${readLocal().length + 1}-${cleanMessage.length}`,
+      id: localId("local"),
       name: cleanName,
       message: cleanMessage,
       created_at: new Date().toISOString(),
     };
-    const all = [entry, ...readLocal()].slice(0, 200);
-    try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(all));
-    } catch {
-      // quota — ignore
-    }
+    writeLocal([entry, ...readLocal()]);
     return entry;
   }
 
-  const res = await fetch(`${URL_BASE}/rest/v1/comments`, {
+  const res = await fetch(restUrl("comments"), {
     method: "POST",
     headers: restHeaders({ Prefer: "return=representation" }),
     body: JSON.stringify({ name: cleanName, message: cleanMessage }),
@@ -130,4 +131,25 @@ export async function postComment(
   if (!res.ok) throw new Error(`Couldn't post (${res.status})`);
   const rows = (await res.json()) as Comment[];
   return rows[0];
+}
+
+/**
+ * Admin: delete a comment. With Supabase the adminKey is sent as the
+ * x-admin-key header and authorized by the RLS delete policy:
+ *
+ *   create policy "admin delete comments" on comments for delete using (
+ *     current_setting('request.headers', true)::json->>'x-admin-key'
+ *       = 'YOUR_ADMIN_SECRET'
+ *   );
+ */
+export async function deleteComment(id: string, adminKey: string): Promise<void> {
+  if (!isGuestbookShared()) {
+    writeLocal(readLocal().filter((c) => c.id !== id));
+    return;
+  }
+  const res = await fetch(restUrl(`comments?id=eq.${encodeURIComponent(id)}`), {
+    method: "DELETE",
+    headers: restHeaders({ "x-admin-key": adminKey }),
+  });
+  if (!res.ok) throw new Error(`Delete failed (${res.status})`);
 }

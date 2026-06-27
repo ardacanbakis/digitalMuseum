@@ -6,6 +6,7 @@ import { setLockElement } from "./scene/player/usePointerLock";
 import { EYE_HEIGHT } from "./scene/player/collision";
 import { DebugPage } from "./ui/DebugPage";
 import { Hud } from "./ui/Hud";
+import { AdminPanel } from "./ui/AdminPanel";
 import { FramePanel } from "./ui/FramePanel";
 import { InfoPanel } from "./ui/InfoPanel";
 import { MapOverlay } from "./ui/MapOverlay";
@@ -37,6 +38,7 @@ export default function App() {
         <MapOverlay />
         <SearchOverlay />
         <TourOverlay />
+        <AdminPanel />
       </div>
     </div>
   );

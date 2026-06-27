@@ -11,6 +11,7 @@ import {
   CREDITS,
   DONATORS,
   frameById,
+  REPO_URL,
   WELCOME,
   type FrameDef,
 } from "../data/lobbyFrames";
@@ -28,6 +29,19 @@ function CoffeeButton() {
       rel="noopener noreferrer"
     >
       ☕ Buy me a coffee
+    </a>
+  );
+}
+
+function GithubButton() {
+  return (
+    <a
+      className={styles.github}
+      href={REPO_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      ⌨ View source
     </a>
   );
 }
@@ -57,6 +71,8 @@ export function FramePanel() {
 }
 
 function FrameBody({ frame }: { frame: FrameDef }) {
+  const stored = useStore((s) => s.supporters);
+  const supporters = stored.length ? stored : DONATORS;
   switch (frame.kind) {
     case "welcome":
       return (
@@ -79,7 +95,7 @@ function FrameBody({ frame }: { frame: FrameDef }) {
             supporters. Thank you. 🙏
           </p>
           <ul className={styles.donators}>
-            {DONATORS.map((d, i) => (
+            {supporters.map((d, i) => (
               <li key={i}>
                 <span className={styles.donatorName}>{d.name}</span>
                 {d.note && <span className={styles.donatorNote}>{d.note}</span>}
@@ -97,7 +113,10 @@ function FrameBody({ frame }: { frame: FrameDef }) {
         <div className={styles.body}>
           <p className={styles.para}>{CREDITS.author}</p>
           <p className={styles.para}>{CREDITS.blurb}</p>
-          <CoffeeButton />
+          <div className={styles.actionRow}>
+            <CoffeeButton />
+            <GithubButton />
+          </div>
           <div className={styles.footerWrap}>
             <Footer />
           </div>
